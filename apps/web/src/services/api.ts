@@ -1,6 +1,29 @@
 import { Decoder } from '@nuintun/qrcode';
+import { readApiOverride } from './storage';
 
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const TEMP_DIRECT_API_BASE_URL = 'http://198.176.63.96:5000';
+const PROXY_API_BASE_URL = '/api';
+
+const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '');
+
+export const getApiBaseUrl = () => {
+  const override = normalizeBaseUrl(readApiOverride());
+  if (override) return override;
+
+  const envBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || '');
+  if (envBaseUrl) return envBaseUrl;
+
+  return TEMP_DIRECT_API_BASE_URL;
+};
+
+export const getApiBaseOptions = () => {
+  return {
+    active: getApiBaseUrl(),
+    env: normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || ''),
+    proxy: PROXY_API_BASE_URL,
+    direct: TEMP_DIRECT_API_BASE_URL,
+  };
+};
 
 type RequestType = 'json' | 'text';
 
@@ -10,7 +33,7 @@ interface RequestOptions {
   type?: RequestType;
 }
 
-const buildUrl = (path: string) => `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+const buildUrl = (path: string) => `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 
 const request = async <T>(path: string, options: RequestOptions = {}) => {
   const method = options.method || 'GET';

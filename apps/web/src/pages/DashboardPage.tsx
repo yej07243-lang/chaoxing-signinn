@@ -12,9 +12,13 @@ export const DashboardPage = () => {
     session,
     activity,
     activityState,
+    authState,
+    loginStatus,
     lastSignStatus,
     monitorActive,
     refreshActivity,
+    signCurrentTask,
+    signPending,
   } = useAppState();
 
   const hasTask = activityState === 'ready' && !!activity?.activeId;
@@ -28,16 +32,26 @@ export const DashboardPage = () => {
           <p className='mt-3 max-w-2xl text-sm leading-6 text-slate-500'>聚合账号、当前任务和最近结果，首页只展示用户真正关心的信息。</p>
         </div>
 
-        <button
-          type='button'
-          onClick={() => refreshActivity()}
-          className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900'
-        >
-          刷新任务
-        </button>
+        <div className='flex flex-wrap gap-3'>
+          <button
+            type='button'
+            onClick={() => refreshActivity()}
+            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900'
+          >
+            立即检测签到
+          </button>
+          <button
+            type='button'
+            disabled={!hasTask || signPending}
+            onClick={signCurrentTask}
+            className='rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+          >
+            {signPending ? '签到中...' : '立即签到'}
+          </button>
+        </div>
       </div>
 
-      <div className='grid gap-4 lg:grid-cols-3'>
+      <div className='grid gap-4 lg:grid-cols-4'>
         <SectionCard title='当前账号'>
           <div className='space-y-3'>
             <div>
@@ -48,6 +62,16 @@ export const DashboardPage = () => {
               <p className='text-sm text-slate-500'>手机号</p>
               <p className='mt-1 text-base font-medium text-slate-900'>{maskPhone(session?.phone || '') || '未保存'}</p>
             </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title='登录状态'>
+          <div className='space-y-3'>
+            <StatusBadge tone={authState === 'authenticated' ? 'success' : authState === 'error' ? 'danger' : 'warning'}>
+              {authState === 'authenticated' ? '已登录' : authState === 'loading' ? '登录中' : '未登录'}
+            </StatusBadge>
+            <p className='text-xl font-semibold text-slate-950'>{loginStatus || (authState === 'authenticated' ? '凭证可用' : '等待登录')}</p>
+            <p className='text-sm text-slate-500'>当前账号的会话状态与接口可用性会体现在这里。</p>
           </div>
         </SectionCard>
 

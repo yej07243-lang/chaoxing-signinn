@@ -5,7 +5,7 @@ import { useAppState } from '../hooks/useAppState';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, loginStatus, authState, session } = useAppState();
+  const { signIn, loginStatus, authState, session, currentApiBaseUrl } = useAppState();
   const [phone, setPhone] = useState(session?.phone || '');
   const [password, setPassword] = useState(session?.password || '');
 
@@ -41,6 +41,11 @@ export const LoginPage = () => {
             <h2 className='mt-3 text-3xl font-semibold text-slate-950'>进入签到控制台</h2>
             <p className='mt-3 text-sm leading-6 text-slate-500'>输入手机号与密码。登录信息仅保存在浏览器 localStorage。</p>
 
+            <div className='mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3'>
+              <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前 API</p>
+              <p className='mt-2 break-all text-sm font-medium text-slate-700'>{currentApiBaseUrl}</p>
+            </div>
+
             <form className='mt-10 space-y-5' onSubmit={onSubmit}>
               <label className='block'>
                 <span className='mb-2 block text-sm font-medium text-slate-700'>手机号</span>
@@ -68,13 +73,15 @@ export const LoginPage = () => {
               <button
                 type='submit'
                 disabled={authState === 'loading'}
-                className='w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60'
+                className='flex w-full items-center justify-center rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60'
               >
                 {authState === 'loading' ? '登录中...' : '登录'}
               </button>
             </form>
 
-            <div className='mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
+            <div className={`mt-6 rounded-2xl px-4 py-3 text-sm ${
+              authState === 'error' ? 'bg-rose-50 text-rose-700' : authState === 'loading' ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600'
+            }`}>
               登录状态：{loginStatus || '等待输入'}
             </div>
           </div>

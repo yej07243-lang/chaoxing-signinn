@@ -21,22 +21,32 @@ export const CoursesPage = () => {
         {courses.length === 0 ? (
           <EmptyState title='还没有课程记录' description='登录后先到 Dashboard 刷新一次任务，课程卡片会随着检测结果逐步沉淀下来。' />
         ) : (
-          <div className='grid gap-4'>
+          <div className='grid gap-4 md:grid-cols-2'>
             {courses.map((course) => (
-              <article key={course.id} className='rounded-3xl border border-slate-200 bg-slate-50/70 p-5 transition hover:border-slate-300'>
-                <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+              <article key={course.id} className='rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/90 p-5 transition hover:border-slate-300'>
+                <div className='flex flex-col gap-4'>
                   <div>
-                    <p className='text-lg font-semibold text-slate-950'>{course.name}</p>
-                    <p className='mt-2 text-sm text-slate-500'>最近更新：{new Date(course.updatedAt).toLocaleString()}</p>
+                    <p className='text-lg font-semibold leading-7 text-slate-950'>{course.name}</p>
+                    <p className='mt-2 text-sm text-slate-500'>更新时间：{new Date(course.updatedAt).toLocaleString()}</p>
                   </div>
 
-                  <div className='flex flex-wrap items-center gap-2'>
-                    <StatusBadge tone={course.hasTask ? 'success' : 'neutral'}>
-                      {course.hasTask ? '有签到' : '无签到'}
-                    </StatusBadge>
-                    <StatusBadge tone={course.status === '已签到' ? 'success' : course.status === '未签到' ? 'warning' : 'neutral'}>
-                      {course.status}
-                    </StatusBadge>
+                  <div className='grid gap-3 rounded-2xl bg-white/80 p-4 sm:grid-cols-2'>
+                    <div>
+                      <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>签到任务</p>
+                      <div className='mt-2'>
+                        <StatusBadge tone={course.hasTask ? 'success' : 'neutral'}>
+                          {course.hasTask ? '当前有签到任务' : '当前无签到任务'}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                    <div>
+                      <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>签到状态</p>
+                      <div className='mt-2'>
+                        <StatusBadge tone={course.status === '已签到' ? 'success' : course.status === '未签到' ? 'warning' : 'neutral'}>
+                          {course.status}
+                        </StatusBadge>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </article>

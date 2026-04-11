@@ -1,7 +1,8 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
-import { api, signTypeLabel } from '../services/api';
+import { api, getApiBaseOptions, signTypeLabel } from '../services/api';
 import {
   appendLog,
+  clearAppStorage,
   defaultConfig,
   mergeCourse,
   readCourses,
@@ -26,9 +27,11 @@ interface AppContextValue {
   loginStatus: string;
   lastSignStatus: string;
   monitorActive: boolean;
+  currentApiBaseUrl: string;
   signPending: boolean;
   signIn: (phone: string, password: string, options?: { silent?: boolean }) => Promise<boolean>;
   signOut: () => void;
+  clearLocalData: () => void;
   refreshActivity: (options?: { silent?: boolean }) => Promise<void>;
   signCurrentTask: () => Promise<void>;
   executeSignAction: (payload: SignActionPayload) => Promise<void>;
@@ -59,6 +62,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [lastSignStatus, setLastSignStatus] = useState('');
   const [monitorActive, setMonitorActive] = useState(false);
   const [signPending, setSignPending] = useState(false);
+  const [currentApiBaseUrl] = useState(getApiBaseOptions().active);
 
   const pushLog = (entry: Omit<LogEntry, 'id' | 'createdAt'>, activeSession: StoredSession | null = session) => {
     setLogs((prev) => {
@@ -104,8 +108,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       return true;
     } catch (_error) {
       setAuthState('error');
-      setLoginStatus('服务暂时不可用');
-      pushLog({ level: 'error', source: 'system', message: '登录请求失败，请稍后重试' }, null);
+      setLoginStatus('登录失败，当前 API 不可用');
+      pushLog({ level: 'error', source: 'system', message: `登录请求失败，请检查 API 地址：${currentApiBaseUrl}` }, null);
       return false;
     }
   };
@@ -115,6 +119,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setActivity(null);
     setActivityState('idle');
     setAuthState('idle');
+    setLoginStatus('');
+    setLastSignStatus('');
+    setMonitorActive(false);
+  };
+
+  const clearLocalData = () => {
+    clearAppStorage();
+    setSession(null);
+    setActivity(null);
+    setActivityState('idle');
+    setAuthState('idle');
+    setLogs([]);
+    setCourses([]);
     setLoginStatus('');
     setLastSignStatus('');
     setMonitorActive(false);
@@ -172,7 +189,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (_error) {
       setActivityState('error');
-      pushLog({ level: 'error', source: 'system', message: '签到任务加载失败' });
+      pushLog({ level: 'error', source: 'system', message: `签到任务加载失败，请检查 API 地址：${currentApiBaseUrl}` });
     }
   };
 
@@ -326,14 +343,16 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     loginStatus,
     lastSignStatus,
     monitorActive,
+    currentApiBaseUrl,
     signPending,
     signIn,
     signOut,
+    clearLocalData,
     refreshActivity,
     signCurrentTask,
     executeSignAction,
     updateAccount,
-  }), [session, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, monitorActive, signPending]);
+  }), [session, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, monitorActive, currentApiBaseUrl, signPending]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

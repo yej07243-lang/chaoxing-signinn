@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { MapPickerModal } from '../components/MapPickerModal';
 import { SectionCard } from '../components/SectionCard';
 import { useAppState } from '../hooks/useAppState';
+import { maskPhone } from '../services/storage';
 
 export const SettingsPage = () => {
-  const { session, updateAccount } = useAppState();
+  const { session, updateAccount, currentApiBaseUrl, signOut, clearLocalData } = useAppState();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [address, setAddress] = useState('');
@@ -43,6 +44,19 @@ export const SettingsPage = () => {
         <h1 className='mt-3 text-3xl font-semibold text-slate-950'>设置</h1>
         <p className='mt-3 max-w-2xl text-sm leading-6 text-slate-500'>这里只保留用户实际会修改的内容：账号、密码以及位置签到需要的基础地址参数。</p>
       </div>
+
+      <SectionCard title='当前连接信息'>
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前 API 地址</p>
+            <p className='mt-3 break-all text-sm font-medium text-slate-800'>{currentApiBaseUrl}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前保存手机号</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{maskPhone(session?.phone || '') || '未保存'}</p>
+          </div>
+        </div>
+      </SectionCard>
 
       <SectionCard title='账号与位置配置'>
         <form className='grid gap-5 lg:grid-cols-2' onSubmit={onSubmit}>
@@ -112,6 +126,25 @@ export const SettingsPage = () => {
             </button>
           </div>
         </form>
+      </SectionCard>
+
+      <SectionCard title='本地数据'>
+        <div className='flex flex-col gap-4 sm:flex-row'>
+          <button
+            type='button'
+            onClick={signOut}
+            className='rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900'
+          >
+            退出登录
+          </button>
+          <button
+            type='button'
+            onClick={clearLocalData}
+            className='rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700'
+          >
+            清空本地登录信息
+          </button>
+        </div>
       </SectionCard>
 
       <MapPickerModal

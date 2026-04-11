@@ -47,6 +47,23 @@ export const LogsPage = () => {
           </div>
         )}
       </SectionCard>
+
+      <SectionCard title='安全说明'>
+        <div className='grid gap-4 md:grid-cols-3'>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-sm font-semibold text-slate-900'>手机号脱敏</p>
+            <p className='mt-2 text-sm leading-6 text-slate-500'>日志写入前会自动清洗手机号，只显示脱敏内容。</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-sm font-semibold text-slate-900'>密码隐藏</p>
+            <p className='mt-2 text-sm leading-6 text-slate-500'>密码不会渲染到日志区域，命中敏感字段时会替换为 `[hidden]`。</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-sm font-semibold text-slate-900'>倒序展示</p>
+            <p className='mt-2 text-sm leading-6 text-slate-500'>最新日志固定在最上方，便于快速确认最近一次登录、检测和签到结果。</p>
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 };

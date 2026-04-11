@@ -1,6 +1,7 @@
 const SESSION_KEY = 'cx-sign:session';
 const LOGS_KEY = 'cx-sign:logs';
 const COURSES_KEY = 'cx-sign:courses';
+const API_OVERRIDE_KEY = 'cx-sign:api-base';
 
 const DEFAULT_MAX_LOGS = 120;
 
@@ -76,7 +77,29 @@ export const writeSession = (session: StoredSession | null) => {
     window.localStorage.removeItem(SESSION_KEY);
     return;
   }
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+  const payload: StoredSession = {
+    phone: session.phone,
+    password: session.password,
+    name: session.name,
+    fid: session.fid,
+    lv: session.lv,
+    uf: session.uf,
+    vc3: session.vc3,
+    _d: session._d,
+    _uid: session._uid,
+    date: session.date,
+    monitor: session.monitor,
+    config: {
+      ...defaultConfig,
+      monitor: {
+        ...defaultConfig.monitor,
+        presetAddress: session.config.monitor.presetAddress.slice(0, 1),
+      },
+    },
+  };
+
+  window.localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
 };
 
 export const readLogs = (): LogEntry[] => {
@@ -122,6 +145,28 @@ export const readCourses = (): CourseListItem[] => {
 export const writeCourses = (courses: CourseListItem[]) => {
   if (!canUseStorage()) return;
   window.localStorage.setItem(COURSES_KEY, JSON.stringify(courses));
+};
+
+export const readApiOverride = () => {
+  if (!canUseStorage()) return '';
+  return window.localStorage.getItem(API_OVERRIDE_KEY) || '';
+};
+
+export const writeApiOverride = (value: string) => {
+  if (!canUseStorage()) return;
+  if (!value) {
+    window.localStorage.removeItem(API_OVERRIDE_KEY);
+    return;
+  }
+  window.localStorage.setItem(API_OVERRIDE_KEY, value);
+};
+
+export const clearAppStorage = () => {
+  if (!canUseStorage()) return;
+  window.localStorage.removeItem(SESSION_KEY);
+  window.localStorage.removeItem(LOGS_KEY);
+  window.localStorage.removeItem(COURSES_KEY);
+  window.localStorage.removeItem(API_OVERRIDE_KEY);
 };
 
 export const mergeCourse = (
