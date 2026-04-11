@@ -1,4 +1,5 @@
 import React from 'react';
+import { QrImageSignCard } from '../components/QrImageSignCard';
 import { SectionCard } from '../components/SectionCard';
 import { SignActionPanel } from '../components/SignActionPanel';
 import { StatusBadge } from '../components/StatusBadge';
@@ -98,6 +99,10 @@ export const DashboardPage = () => {
 
       <SectionCard title='立即签到' description='保留后端原有接口，不改变业务逻辑，只重做前端交互。'>
         <SignActionPanel />
+      </SectionCard>
+
+      <SectionCard title='二维码图片签到' description='不阻塞主流程。即使当前没有检测到活动，也可以直接上传二维码图片完成签到。'>
+        <QrImageSignCard />
       </SectionCard>
     </div>
   );

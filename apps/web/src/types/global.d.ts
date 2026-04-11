@@ -84,13 +84,11 @@ interface SignActionPayload {
   photoFile?: File | null;
   qrEnc?: string;
   qrImage?: File | null;
+  qrUrl?: string;
   address?: AddressItem | null;
   altitude?: string;
 }
 
 interface Window {
   AMap?: any;
-  _AMapSecurityConfig?: {
-    securityJsCode?: string;
-  };
 }

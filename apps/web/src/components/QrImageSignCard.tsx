@@ -1,0 +1,89 @@
+import React, { useState } from 'react';
+import { useAppState } from '../hooks/useAppState';
+import { StatusBadge } from './StatusBadge';
+
+const fieldClassName =
+  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
+
+export const QrImageSignCard = () => {
+  const { signPending, signQrImage, lastQrSignStatus, session } = useAppState();
+  const preset = session?.config.monitor.presetAddress?.[0];
+  const [qrImage, setQrImage] = useState<File | null>(null);
+  const [address, setAddress] = useState(preset?.address || '');
+  const [lon, setLon] = useState(preset?.lon || '');
+  const [lat, setLat] = useState(preset?.lat || '');
+  const [altitude, setAltitude] = useState('100');
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!qrImage) return;
+
+    await signQrImage({
+      qrImage,
+      altitude,
+      address: {
+        address: address.trim(),
+        lon: lon.trim(),
+        lat: lat.trim(),
+      },
+    });
+  };
+
+  return (
+    <form className='space-y-5' onSubmit={onSubmit}>
+      <div className='flex flex-wrap items-center gap-3'>
+        <StatusBadge tone='neutral'>二维码图片签到</StatusBadge>
+        <StatusBadge tone={lastQrSignStatus === '签到成功' ? 'success' : 'warning'}>
+          {lastQrSignStatus ? '最近结果' : '等待识别'}
+        </StatusBadge>
+      </div>
+
+      <div>
+        <h2 className='text-2xl font-semibold text-slate-950'>上传二维码图片直接签到</h2>
+        <p className='mt-2 text-sm leading-6 text-slate-500'>使用 `html5-qrcode` 在前端解析图片中的二维码 URL，再调用后端新接口完成签到，不依赖当前检测到的活动。</p>
+      </div>
+
+      <label className='block'>
+        <span className='mb-2 block text-sm font-medium text-slate-700'>二维码图片</span>
+        <input
+          type='file'
+          accept='image/*'
+          onChange={(event) => setQrImage(event.target.files?.[0] || null)}
+          className={fieldClassName}
+        />
+      </label>
+
+      <div className='grid gap-4 lg:grid-cols-2'>
+        <label className='block'>
+          <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
+          <input value={lon} onChange={(event) => setLon(event.target.value)} className={fieldClassName} />
+        </label>
+
+        <label className='block'>
+          <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
+          <input value={lat} onChange={(event) => setLat(event.target.value)} className={fieldClassName} />
+        </label>
+
+        <label className='block lg:col-span-2'>
+          <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
+          <input value={address} onChange={(event) => setAddress(event.target.value)} className={fieldClassName} />
+        </label>
+
+        <label className='block lg:col-span-2'>
+          <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
+          <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
+        </label>
+      </div>
+
+      {lastQrSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>结果：{lastQrSignStatus}</div> : null}
+
+      <button
+        type='submit'
+        disabled={!qrImage || signPending}
+        className='h-14 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+      >
+        {signPending ? '识别并签到中...' : '识别二维码并签到'}
+      </button>
+    </form>
+  );
+};

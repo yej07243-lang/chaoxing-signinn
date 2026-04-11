@@ -8,7 +8,7 @@ import { preSign, traverseCourseActivity } from './functions/activity';
 import { GeneralSign } from './functions/general';
 import { LocationSign } from './functions/location';
 import { PhotoSign, uploadPhoto } from './functions/photo';
-import { QRCodeSign } from './functions/qrcode';
+import { parseQrSignUrl, QRCodeSign } from './functions/qrcode';
 import { QrCodeScan } from './functions/tencent.qrcode';
 import { getAccountInfo, getCourses, getPanToken, userLogin } from './functions/user';
 import { getJsonObject } from './utils/file';
@@ -31,7 +31,6 @@ router.post('/login', async (ctx) => {
     return;
   }
   params.name = (await getAccountInfo(params)) || '获取失败';
-  console.log(ctx.request.body);
   ctx.body = params;
 });
 
@@ -84,12 +83,44 @@ router.post('/qrcode', async (ctx) => {
     altitude
   });
   console.log(name, uid);
-  if (res === 'success') {
+  if (res === 'success' || res.includes('签到成功')) {
     ctx.body = 'success';
     return;
   } else {
     ctx.body = res;
   }
+});
+
+router.post('/qr-sign', async (ctx) => {
+  const { name, fid, uid, uf, _d, vc3, qrUrl, lat, lon, address, altitude } = ctx.request.body as any;
+  const parsed = parseQrSignUrl(qrUrl);
+
+  if (!parsed) {
+    ctx.body = '二维码内容无效，未解析到 activeId 或 enc';
+    return;
+  }
+
+  const res = await QRCodeSign({
+    enc: parsed.enc,
+    activeId: parsed.activeId,
+    name,
+    fid,
+    _uid: uid,
+    uf,
+    _d,
+    vc3,
+    lat,
+    lon,
+    address,
+    altitude,
+  });
+
+  if (res === 'success' || res.includes('签到成功')) {
+    ctx.body = 'success';
+    return;
+  }
+
+  ctx.body = res;
 });
 
 router.post('/location', async (ctx) => {

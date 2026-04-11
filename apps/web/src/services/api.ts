@@ -1,4 +1,4 @@
-import { Decoder } from '@nuintun/qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { readApiOverride } from './storage';
 
 const TEMP_DIRECT_API_BASE_URL = 'http://198.176.63.96:5000';
@@ -25,12 +25,20 @@ export const getApiBaseOptions = () => {
   };
 };
 
+export const hasAmapKey = () => Boolean((import.meta.env.VITE_AMAP_KEY || '').trim());
+
 type RequestType = 'json' | 'text';
 
 interface RequestOptions {
   method?: 'GET' | 'POST';
   body?: BodyInit | object;
   type?: RequestType;
+}
+
+interface GeocodeResult {
+  lon: string;
+  lat: string;
+  formattedAddress: string;
 }
 
 const buildUrl = (path: string) => `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
@@ -66,6 +74,20 @@ const request = async <T>(path: string, options: RequestOptions = {}) => {
   }
 
   return response.text() as Promise<T>;
+};
+
+const requestAmap = async (address: string) => {
+  const key = (import.meta.env.VITE_AMAP_KEY || '').trim();
+  if (!key) {
+    throw new Error('missing-amap-key');
+  }
+
+  const url = `https://restapi.amap.com/v3/geocode/geo?key=${encodeURIComponent(key)}&address=${encodeURIComponent(address)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`amap-request-failed:${response.status}`);
+  }
+  return response.json() as Promise<any>;
 };
 
 const credentialsPayload = (session: StoredSession) => ({
@@ -145,6 +167,21 @@ export const api = {
     });
   },
 
+  async qrSign(session: StoredSession, qrUrl: string, address: AddressItem, altitude = '100') {
+    return request<string>('/qr-sign', {
+      method: 'POST',
+      type: 'text',
+      body: {
+        ...credentialsPayload(session),
+        qrUrl,
+        lat: address.lat,
+        lon: address.lon,
+        address: address.address,
+        altitude,
+      },
+    });
+  },
+
   async getUploadToken(session: StoredSession) {
     return request<{ _token: string }>('/uvtoken', {
       method: 'POST',
@@ -185,16 +222,51 @@ export const api = {
   },
 
   async parseQRCode(file: File) {
-    const qrcode = new Decoder();
-    const objectUrl = URL.createObjectURL(file);
+    const hostId = 'html5-qrcode-image-reader';
+    let host = document.getElementById(hostId);
+    if (!host) {
+      host = document.createElement('div');
+      host.id = hostId;
+      host.style.display = 'none';
+      document.body.appendChild(host);
+    }
+
+    const scanner = new Html5Qrcode(hostId);
 
     try {
-      const result = await qrcode.scan(objectUrl);
-      const encStart = result.data.indexOf('enc=') + 4;
-      return result.data.substring(encStart, result.data.indexOf('&', encStart));
+      const decodedText = await scanner.scanFile(file, true);
+      return decodedText;
     } finally {
-      URL.revokeObjectURL(objectUrl);
+      try {
+        scanner.clear();
+      } catch (_error) {
+        // html5-qrcode 在 scanFile 场景下清理失败不影响主流程
+      }
     }
+  },
+
+  async geocodeAddress(address: string): Promise<GeocodeResult> {
+    const keyword = address.trim();
+    if (!keyword) {
+      throw new Error('empty-address');
+    }
+
+    const data = await requestAmap(keyword);
+    if (data.status !== '1' || !Array.isArray(data.geocodes) || data.geocodes.length === 0) {
+      throw new Error('geocode-not-found');
+    }
+
+    const first = data.geocodes[0];
+    const [lon, lat] = String(first.location || '').split(',');
+    if (!lon || !lat) {
+      throw new Error('geocode-invalid-location');
+    }
+
+    return {
+      lon,
+      lat,
+      formattedAddress: first.formatted_address || keyword,
+    };
   },
 };
 

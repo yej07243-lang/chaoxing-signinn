@@ -26,6 +26,7 @@ interface AppContextValue {
   courses: CourseListItem[];
   loginStatus: string;
   lastSignStatus: string;
+  lastQrSignStatus: string;
   monitorActive: boolean;
   currentApiBaseUrl: string;
   signPending: boolean;
@@ -35,6 +36,7 @@ interface AppContextValue {
   refreshActivity: (options?: { silent?: boolean }) => Promise<void>;
   signCurrentTask: () => Promise<void>;
   executeSignAction: (payload: SignActionPayload) => Promise<void>;
+  signQrImage: (payload: SignActionPayload) => Promise<void>;
   updateAccount: (phone: string, password: string, address: AddressItem) => Promise<boolean>;
 }
 
@@ -60,6 +62,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [courses, setCourses] = useState<CourseListItem[]>(() => readCourses());
   const [loginStatus, setLoginStatus] = useState('');
   const [lastSignStatus, setLastSignStatus] = useState('');
+  const [lastQrSignStatus, setLastQrSignStatus] = useState('');
   const [monitorActive, setMonitorActive] = useState(false);
   const [signPending, setSignPending] = useState(false);
   const [currentApiBaseUrl] = useState(getApiBaseOptions().active);
@@ -121,6 +124,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setAuthState('idle');
     setLoginStatus('');
     setLastSignStatus('');
+    setLastQrSignStatus('');
     setMonitorActive(false);
   };
 
@@ -134,6 +138,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setCourses([]);
     setLoginStatus('');
     setLastSignStatus('');
+    setLastQrSignStatus('');
     setMonitorActive(false);
   };
 
@@ -305,6 +310,47 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return true;
   };
 
+  const signQrImage = async (payload: SignActionPayload) => {
+    if (!session) return;
+
+    try {
+      setSignPending(true);
+
+      if (!payload.address?.address || !payload.address.lon || !payload.address.lat) {
+        setLastQrSignStatus('二维码签到需要经纬度和地址');
+        return;
+      }
+
+      if (!payload.qrImage) {
+        setLastQrSignStatus('请先上传二维码图片');
+        return;
+      }
+
+      const qrUrl = await api.parseQRCode(payload.qrImage);
+      if (!qrUrl) {
+        setLastQrSignStatus('二维码识别失败');
+        pushLog({ level: 'error', source: 'sign', message: '二维码识别失败，请更换清晰图片后重试' });
+        return;
+      }
+
+      const result = await api.qrSign(session, qrUrl, payload.address, payload.altitude || '100');
+      const success = result === 'success' || result.includes('签到成功');
+      const text = success ? '签到成功' : result;
+
+      setLastQrSignStatus(text);
+      pushLog({
+        level: success ? 'success' : 'error',
+        source: 'sign',
+        message: `二维码图片签到：${text}`,
+      });
+    } catch (_error) {
+      setLastQrSignStatus('二维码识别或签到失败');
+      pushLog({ level: 'error', source: 'system', message: '二维码图片签到失败，请检查图片或接口状态' });
+    } finally {
+      setSignPending(false);
+    }
+  };
+
   useEffect(() => {
     writeLogs(logs);
   }, [logs]);
@@ -342,6 +388,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     courses,
     loginStatus,
     lastSignStatus,
+    lastQrSignStatus,
     monitorActive,
     currentApiBaseUrl,
     signPending,
@@ -351,8 +398,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     refreshActivity,
     signCurrentTask,
     executeSignAction,
+    signQrImage,
     updateAccount,
-  }), [session, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, monitorActive, currentApiBaseUrl, signPending]);
+  }), [session, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, lastQrSignStatus, monitorActive, currentApiBaseUrl, signPending]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

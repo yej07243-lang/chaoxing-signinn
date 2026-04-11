@@ -14,3 +14,19 @@ export const QRCodeSign = async (args: BasicCookie & { enc: string; name: string
 
   return msg;
 };
+
+export const parseQrSignUrl = (qrUrl: string) => {
+  try {
+    const url = new URL(qrUrl);
+    const enc = url.searchParams.get('enc') || '';
+    const activeId = url.searchParams.get('activeId') || url.searchParams.get('activeid') || '';
+
+    if (!enc || !activeId) {
+      return null;
+    }
+
+    return { enc, activeId };
+  } catch (_error) {
+    return null;
+  }
+};
