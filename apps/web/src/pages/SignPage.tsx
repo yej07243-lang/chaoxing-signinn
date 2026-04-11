@@ -14,7 +14,7 @@ export const SignPage = () => {
         <p className='text-sm font-medium uppercase tracking-[0.25em] text-slate-400'>Sign</p>
         <h1 className='mt-3 text-3xl font-semibold text-slate-950'>签到</h1>
         <p className='mt-3 max-w-2xl text-sm leading-6 text-slate-500'>
-          将所有可选签到方式集中到一个页面：当前活动签到、位置签到、拍照签到，以及二维码图片签到。
+          将所有可选签到方式集中到一个页面：当前活动签到、拍照签到、位置签到、签到码签到，以及二维码图片签到。
         </p>
       </div>
 

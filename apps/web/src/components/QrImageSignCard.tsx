@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
+import { api, hasAmapKey } from '../services/api';
+import { LocationPreviewMap } from './LocationPreviewMap';
 import { StatusBadge } from './StatusBadge';
 
 const fieldClassName =
@@ -13,6 +15,8 @@ export const QrImageSignCard = () => {
   const [lon, setLon] = useState(preset?.lon || '');
   const [lat, setLat] = useState(preset?.lat || '');
   const [altitude, setAltitude] = useState('100');
+  const [geocodeStatus, setGeocodeStatus] = useState('');
+  const [geocodeLoading, setGeocodeLoading] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,6 +31,28 @@ export const QrImageSignCard = () => {
         lat: lat.trim(),
       },
     });
+  };
+
+  const resolveAddress = async () => {
+    try {
+      setGeocodeLoading(true);
+      setGeocodeStatus('正在解析地址');
+      const result = await api.geocodeAddress(address);
+      setLon(result.lon);
+      setLat(result.lat);
+      setAddress(result.formattedAddress);
+      setGeocodeStatus('已获取位置，可直接用于签到');
+    } catch (error) {
+      if (error instanceof Error && error.message === 'missing-amap-key') {
+        setGeocodeStatus('未配置高德 Key，无法自动解析地址');
+      } else if (error instanceof Error && error.message === 'empty-address') {
+        setGeocodeStatus('请先输入地址');
+      } else {
+        setGeocodeStatus('地址解析失败，请调整地址关键词或手动填写经纬度');
+      }
+    } finally {
+      setGeocodeLoading(false);
+    }
   };
 
   return (
@@ -69,10 +95,28 @@ export const QrImageSignCard = () => {
           <input value={address} onChange={(event) => setAddress(event.target.value)} className={fieldClassName} />
         </label>
 
+        <div className='lg:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center'>
+          <button
+            type='button'
+            onClick={resolveAddress}
+            disabled={geocodeLoading}
+            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            {geocodeLoading ? '获取中...' : '获取位置'}
+          </button>
+          <p className='text-sm text-slate-500'>
+            {geocodeStatus || (hasAmapKey() ? '输入地址后可自动获取经纬度' : '当前未配置高德 Key，只能手动填写经纬度')}
+          </p>
+        </div>
+
         <label className='block lg:col-span-2'>
           <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
           <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
         </label>
+
+        <div className='lg:col-span-2'>
+          <LocationPreviewMap lon={lon} lat={lat} address={address} />
+        </div>
       </div>
 
       {lastQrSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>结果：{lastQrSignStatus}</div> : null}

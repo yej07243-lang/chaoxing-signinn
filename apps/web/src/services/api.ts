@@ -137,6 +137,18 @@ export const api = {
     });
   },
 
+  async codeSign(session: StoredSession, activeId: number, signCode: string) {
+    return request<string>('/code-sign', {
+      method: 'POST',
+      type: 'text',
+      body: {
+        ...credentialsPayload(session),
+        activeId,
+        signCode,
+      },
+    });
+  },
+
   async locationSign(session: StoredSession, activeId: number, address: AddressItem) {
     return request<string>('/location', {
       method: 'POST',

@@ -1,4 +1,5 @@
 const SESSION_KEY = 'cx-sign:session';
+const ACCOUNTS_KEY = 'cx-sign:accounts';
 const LOGS_KEY = 'cx-sign:logs';
 const COURSES_KEY = 'cx-sign:courses';
 const API_OVERRIDE_KEY = 'cx-sign:api-base';
@@ -34,6 +35,27 @@ export const defaultConfig: UserConfig = {
 };
 
 const canUseStorage = () => typeof window !== 'undefined' && !!window.localStorage;
+
+const toStoredPayload = (session: StoredSession): StoredSession => ({
+  phone: session.phone,
+  password: session.password,
+  name: session.name,
+  fid: session.fid,
+  lv: session.lv,
+  uf: session.uf,
+  vc3: session.vc3,
+  _d: session._d,
+  _uid: session._uid,
+  date: session.date,
+  monitor: session.monitor,
+  config: {
+    ...defaultConfig,
+    monitor: {
+      ...defaultConfig.monitor,
+      presetAddress: session.config.monitor.presetAddress.slice(0, 1),
+    },
+  },
+});
 
 export const maskPhone = (phone: string) => {
   if (!phone) return '';
@@ -71,6 +93,37 @@ export const readSession = (): StoredSession | null => {
   }
 };
 
+export const readAccounts = (): StoredSession[] => {
+  if (!canUseStorage()) return [];
+  const raw = window.localStorage.getItem(ACCOUNTS_KEY);
+  if (!raw) return [];
+
+  try {
+    const value = JSON.parse(raw) as StoredSession[];
+    return Array.isArray(value) ? value : [];
+  } catch (_error) {
+    return [];
+  }
+};
+
+export const writeAccounts = (accounts: StoredSession[]) => {
+  if (!canUseStorage()) return;
+  const payload = accounts
+    .map((account) => toStoredPayload(account))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(payload));
+};
+
+export const upsertAccount = (accounts: StoredSession[], session: StoredSession) => {
+  const payload = toStoredPayload(session);
+  const next = accounts.filter((item) => item.phone !== payload.phone);
+  return [payload, ...next].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+export const removeAccount = (accounts: StoredSession[], phone: string) => {
+  return accounts.filter((item) => item.phone !== phone);
+};
+
 export const writeSession = (session: StoredSession | null) => {
   if (!canUseStorage()) return;
   if (!session) {
@@ -78,28 +131,9 @@ export const writeSession = (session: StoredSession | null) => {
     return;
   }
 
-  const payload: StoredSession = {
-    phone: session.phone,
-    password: session.password,
-    name: session.name,
-    fid: session.fid,
-    lv: session.lv,
-    uf: session.uf,
-    vc3: session.vc3,
-    _d: session._d,
-    _uid: session._uid,
-    date: session.date,
-    monitor: session.monitor,
-    config: {
-      ...defaultConfig,
-      monitor: {
-        ...defaultConfig.monitor,
-        presetAddress: session.config.monitor.presetAddress.slice(0, 1),
-      },
-    },
-  };
-
+  const payload = toStoredPayload(session);
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  writeAccounts(upsertAccount(readAccounts(), payload));
 };
 
 export const readLogs = (): LogEntry[] => {
@@ -164,6 +198,7 @@ export const writeApiOverride = (value: string) => {
 export const clearAppStorage = () => {
   if (!canUseStorage()) return;
   window.localStorage.removeItem(SESSION_KEY);
+  window.localStorage.removeItem(ACCOUNTS_KEY);
   window.localStorage.removeItem(LOGS_KEY);
   window.localStorage.removeItem(COURSES_KEY);
   window.localStorage.removeItem(API_OVERRIDE_KEY);

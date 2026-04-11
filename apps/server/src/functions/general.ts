@@ -14,6 +14,22 @@ export const GeneralSign = async (args: BasicCookie & { name: string; activeId: 
   return msg;
 };
 
+export const CodeSign = async (
+  args: BasicCookie & { name: string; activeId: string; fid: string; signCode: string }
+): Promise<string> => {
+  const { name, activeId, fid, signCode, ...cookies } = args;
+  const encodedCode = encodeURIComponent(signCode);
+  const url = `${PPTSIGN.URL}?activeId=${activeId}&uid=${cookies._uid}&clientip=&latitude=-1&longitude=-1&appType=15&fid=${fid}&name=${encodeURIComponent(name)}&signCode=${encodedCode}&code=${encodedCode}&validate=${encodedCode}`;
+  const result = await request(url, {
+    headers: {
+      Cookie: cookieSerialize(cookies),
+    },
+  });
+  const msg = result.data === 'success' ? '[签到码]签到成功' : `[签到码]${result.data}`;
+  console.log(msg);
+  return msg;
+};
+
 /**
  * 群聊签到方式，无课程
  */

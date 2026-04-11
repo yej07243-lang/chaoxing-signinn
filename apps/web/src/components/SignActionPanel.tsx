@@ -14,6 +14,7 @@ export const SignActionPanel = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [qrEnc, setQrEnc] = useState('');
   const [qrImage, setQrImage] = useState<File | null>(null);
+  const [signCode, setSignCode] = useState('');
   const [address, setAddress] = useState(preset?.address || '');
   const [lon, setLon] = useState(preset?.lon || '');
   const [lat, setLat] = useState(preset?.lat || '');
@@ -32,6 +33,7 @@ export const SignActionPanel = () => {
     setPhotoFile(null);
     setQrEnc('');
     setQrImage(null);
+    setSignCode('');
     setMode('general');
 
     if (!activity) {
@@ -48,6 +50,9 @@ export const SignActionPanel = () => {
         break;
       case 0:
         setHelperText('普通 / 拍照签到都在这里处理，可手动切换模式。');
+        break;
+      case 5:
+        setHelperText('签到码签到会携带你输入的签到码提交，若后端返回失败会直接展示原始结果。');
         break;
       default:
         setHelperText('当前类型无需额外参数，可直接提交。');
@@ -66,6 +71,7 @@ export const SignActionPanel = () => {
       photoFile,
       qrEnc,
       qrImage,
+      signCode,
       altitude,
       address: {
         address: address.trim(),
@@ -223,6 +229,18 @@ export const SignActionPanel = () => {
             <LocationPreviewMap lon={lon} lat={lat} address={address} />
           </div>
         </div>
+      ) : null}
+
+      {activity?.otherId === 5 ? (
+        <label className='block'>
+          <span className='mb-2 block text-sm font-medium text-slate-700'>签到码</span>
+          <input
+            value={signCode}
+            onChange={(event) => setSignCode(event.target.value)}
+            className={fieldClassName}
+            placeholder='输入老师发布的签到码'
+          />
+        </label>
       ) : null}
 
         <button

@@ -6,7 +6,7 @@ import { isAmapConfigured } from '../services/amap';
 import { maskPhone } from '../services/storage';
 
 export const SettingsPage = () => {
-  const { session, updateAccount, currentApiBaseUrl, signOut, clearLocalData } = useAppState();
+  const { session, accounts, updateAccount, currentApiBaseUrl, signOut, clearLocalData, switchAccount, removeSavedAccount } = useAppState();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [address, setAddress] = useState('');
@@ -60,6 +60,43 @@ export const SettingsPage = () => {
             <p className='mt-3 text-sm font-medium text-slate-800'>{isAmapConfigured() ? '已配置高德 JS API Key，可显示地图预览' : '未配置高德 JS API Key，仅保留经纬度输入'}</p>
           </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title='已保存账号' description='登录过的账号会保存在本地浏览器中，可以直接切换或删除。'>
+        {accounts.length === 0 ? (
+          <p className='text-sm text-slate-500'>当前还没有保存多个账号。</p>
+        ) : (
+          <div className='grid gap-4'>
+            {accounts.map((account) => {
+              const active = session?.phone === account.phone;
+              return (
+                <div key={account.phone} className='flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between'>
+                  <div>
+                    <p className='text-sm font-semibold text-slate-900'>{maskPhone(account.phone)}</p>
+                    <p className='mt-1 text-xs text-slate-500'>最近更新时间：{new Date(account.date).toLocaleString()}</p>
+                  </div>
+                  <div className='flex flex-wrap gap-3'>
+                    <button
+                      type='button'
+                      onClick={() => void switchAccount(account.phone)}
+                      disabled={active}
+                      className='rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+                    >
+                      {active ? '当前账号' : '切换'}
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => removeSavedAccount(account.phone)}
+                      className='rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700'
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard title='账号与位置配置'>

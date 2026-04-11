@@ -85,6 +85,7 @@ interface SignActionPayload {
   qrEnc?: string;
   qrImage?: File | null;
   qrUrl?: string;
+  signCode?: string;
   address?: AddressItem | null;
   altitude?: string;
 }

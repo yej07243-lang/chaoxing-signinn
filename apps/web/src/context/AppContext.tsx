@@ -5,10 +5,13 @@ import {
   clearAppStorage,
   defaultConfig,
   mergeCourse,
+  readAccounts,
   readCourses,
   readLogs,
   readSession,
+  removeAccount,
   sanitizeMessage,
+  writeAccounts,
   writeCourses,
   writeLogs,
   writeSession,
@@ -19,6 +22,7 @@ type AuthState = 'idle' | 'loading' | 'authenticated' | 'error';
 
 interface AppContextValue {
   session: StoredSession | null;
+  accounts: StoredSession[];
   activity: ActivityItem | null;
   activityState: ActivityState;
   authState: AuthState;
@@ -38,6 +42,8 @@ interface AppContextValue {
   executeSignAction: (payload: SignActionPayload) => Promise<void>;
   signQrImage: (payload: SignActionPayload) => Promise<void>;
   updateAccount: (phone: string, password: string, address: AddressItem) => Promise<boolean>;
+  switchAccount: (phone: string) => Promise<void>;
+  removeSavedAccount: (phone: string) => void;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);
@@ -55,6 +61,7 @@ const toSession = (phone: string, password: string, data: StoredSession | Omit<S
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<StoredSession | null>(() => readSession());
+  const [accounts, setAccounts] = useState<StoredSession[]>(() => readAccounts());
   const [activity, setActivity] = useState<ActivityItem | null>(null);
   const [activityState, setActivityState] = useState<ActivityState>('idle');
   const [authState, setAuthState] = useState<AuthState>(() => (readSession() ? 'authenticated' : 'idle'));
@@ -81,6 +88,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const persistSession = (value: StoredSession | null) => {
     setSession(value);
     writeSession(value);
+    setAccounts(readAccounts());
   };
 
   const persistCourses = (value: CourseListItem[]) => {
@@ -118,7 +126,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = () => {
-    persistSession(null);
+    setSession(null);
+    writeSession(null);
     setActivity(null);
     setActivityState('idle');
     setAuthState('idle');
@@ -131,6 +140,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const clearLocalData = () => {
     clearAppStorage();
     setSession(null);
+    setAccounts([]);
     setActivity(null);
     setActivityState('idle');
     setAuthState('idle');
@@ -254,7 +264,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           break;
         }
         case 3:
+          result = await api.generalSign(session, activity.activeId);
+          break;
         case 5:
+          if (!payload.signCode?.trim()) {
+            result = '签到码签到需要先输入签到码';
+            break;
+          }
+          result = await api.codeSign(session, activity.activeId, payload.signCode.trim());
+          break;
         default:
           result = await api.generalSign(session, activity.activeId);
           break;
@@ -286,6 +304,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateAccount = async (phone: string, password: string, address: AddressItem) => {
+    const previousPhone = session?.phone || '';
     const loggedIn = await signIn(phone, password);
     if (!loggedIn) return false;
 
@@ -305,9 +324,42 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       },
     };
 
+    if (previousPhone && previousPhone !== phone) {
+      const nextAccounts = removeAccount(readAccounts(), previousPhone);
+      writeAccounts(nextAccounts);
+      setAccounts(nextAccounts);
+    }
+
     persistSession(nextSession);
     pushLog({ level: 'success', source: 'auth', message: '设置已保存' }, nextSession);
     return true;
+  };
+
+  const switchAccount = async (phone: string) => {
+    const target = accounts.find((item) => item.phone === phone);
+    if (!target) return;
+    const switched = await signIn(target.phone, target.password, { silent: true });
+    if (switched) {
+      setLoginStatus('已切换账号');
+    }
+  };
+
+  const removeSavedAccount = (phone: string) => {
+    const nextAccounts = removeAccount(accounts, phone);
+    writeAccounts(nextAccounts);
+    setAccounts(nextAccounts);
+
+    if (session?.phone === phone) {
+      setSession(null);
+      writeSession(null);
+      setActivity(null);
+      setActivityState('idle');
+      setAuthState('idle');
+      setLoginStatus('');
+      setLastSignStatus('');
+      setLastQrSignStatus('');
+      setMonitorActive(false);
+    }
   };
 
   const signQrImage = async (payload: SignActionPayload) => {
@@ -381,6 +433,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = useMemo<AppContextValue>(() => ({
     session,
+    accounts,
     activity,
     activityState,
     authState,
@@ -400,7 +453,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     executeSignAction,
     signQrImage,
     updateAccount,
-  }), [session, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, lastQrSignStatus, monitorActive, currentApiBaseUrl, signPending]);
+    switchAccount,
+    removeSavedAccount,
+  }), [session, accounts, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, lastQrSignStatus, monitorActive, currentApiBaseUrl, signPending]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

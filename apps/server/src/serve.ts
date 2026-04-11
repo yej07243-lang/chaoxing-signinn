@@ -5,7 +5,7 @@ import bodyparser from 'koa-bodyparser';
 import multiparty from 'multiparty';
 import serverless from 'serverless-http';
 import { preSign, traverseCourseActivity } from './functions/activity';
-import { GeneralSign } from './functions/general';
+import { CodeSign, GeneralSign } from './functions/general';
 import { LocationSign } from './functions/location';
 import { PhotoSign, uploadPhoto } from './functions/photo';
 import { parseQrSignUrl, QRCodeSign } from './functions/qrcode';
@@ -159,6 +159,26 @@ router.post('/general', async (ctx) => {
   });
   console.log(name, uid);
   if (res === 'success') {
+    ctx.body = 'success';
+    return;
+  } else {
+    ctx.body = res;
+  }
+});
+
+router.post('/code-sign', async (ctx) => {
+  const { uf, _d, vc3, name, activeId, uid, fid, signCode } = ctx.request.body as any;
+  const res = await CodeSign({
+    uf,
+    _d,
+    vc3,
+    name,
+    activeId,
+    _uid: uid,
+    fid,
+    signCode,
+  });
+  if (res === 'success' || res.includes('签到成功')) {
     ctx.body = 'success';
     return;
   } else {

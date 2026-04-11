@@ -5,7 +5,7 @@ import { useAppState } from '../hooks/useAppState';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, loginStatus, authState, session, currentApiBaseUrl } = useAppState();
+  const { signIn, loginStatus, authState, session, accounts, currentApiBaseUrl } = useAppState();
   const [phone, setPhone] = useState(session?.phone || '');
   const [password, setPassword] = useState(session?.password || '');
 
@@ -45,6 +45,27 @@ export const LoginPage = () => {
               <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前 API</p>
               <p className='mt-2 break-all text-sm font-medium text-slate-700'>{currentApiBaseUrl}</p>
             </div>
+
+            {accounts.length > 0 ? (
+              <div className='mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-4'>
+                <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>已保存账号</p>
+                <div className='mt-3 flex flex-wrap gap-2'>
+                  {accounts.map((account) => (
+                    <button
+                      key={account.phone}
+                      type='button'
+                      onClick={() => {
+                        setPhone(account.phone);
+                        setPassword(account.password);
+                      }}
+                      className='rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-900'
+                    >
+                      {account.phone.slice(0, 3)}****{account.phone.slice(-4)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <form className='mt-10 space-y-5' onSubmit={onSubmit}>
               <label className='block'>
