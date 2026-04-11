@@ -1,8 +1,8 @@
-declare module '*.module.css';
-
 declare module '@nuintun/qrcode';
 
-interface UserParamsType {
+type SignTypeId = 0 | 2 | 3 | 4 | 5;
+
+interface StoredSession {
   phone: string;
   password: string;
   name: string;
@@ -12,7 +12,7 @@ interface UserParamsType {
   vc3: string;
   _d: string;
   _uid: string;
-  date: Date;
+  date: string;
   monitor: boolean;
   config: UserConfig;
 }
@@ -51,4 +51,43 @@ interface CQServerConfig {
   ws_url: string;
   target_type: string;
   target_id: number;
+}
+
+interface ActivityItem {
+  name: string;
+  activeId?: number;
+  courseId?: string | number;
+  classId?: string | number;
+  otherId?: SignTypeId;
+}
+
+interface CourseListItem {
+  id: string;
+  name: string;
+  hasTask: boolean;
+  status: '已签到' | '未签到' | '待处理' | '需要配置';
+  updatedAt: string;
+  courseId?: string | number;
+  classId?: string | number;
+}
+
+interface LogEntry {
+  id: string;
+  level: 'info' | 'success' | 'error';
+  source: 'auth' | 'activity' | 'sign' | 'system';
+  message: string;
+  createdAt: string;
+}
+
+interface SignActionPayload {
+  mode?: 'general' | 'photo';
+  photoFile?: File | null;
+  qrEnc?: string;
+  qrImage?: File | null;
+  address?: AddressItem | null;
+  altitude?: string;
+}
+
+interface Window {
+  AMap?: any;
 }

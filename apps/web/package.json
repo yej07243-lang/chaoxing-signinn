@@ -24,9 +24,12 @@
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.0",
+    "autoprefixer": "^10.4.27",
     "eslint": "^8.36.0",
     "eslint-config-custom": "workspace:*",
+    "postcss": "^8.5.9",
     "rollup-plugin-visualizer": "^5.7.1",
+    "tailwindcss": "^3.4.17",
     "tsconfig": "workspace:*",
     "typescript": "^4.7.4",
     "vite": "^3.0.0"

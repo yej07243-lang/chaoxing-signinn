@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "turbo run dev:serve dev --filter=./apps/*",
-    "build": "turbo run build",
+    "build": "corepack pnpm@10.11.0 --filter server build && corepack pnpm@10.11.0 --filter web build",
     "start": "node ./apps/server/build/index.js",
     "serve": "node ./apps/server/build/serve.js",
     "monitor": "node ./apps/server/build/monitor.js",
@@ -20,7 +20,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "packageManager": "pnpm@7.28.0",
+  "packageManager": "pnpm@10.11.0",
   "devDependencies": {
     "turbo": "^1.8.8"
   }
