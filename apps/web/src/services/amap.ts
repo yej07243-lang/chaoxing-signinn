@@ -3,12 +3,21 @@ let amapPromise: Promise<any> | null = null;
 const AMAP_URL = 'https://webapi.amap.com/maps?v=2.0';
 
 export const getAmapKey = () => import.meta.env.VITE_AMAP_KEY || '';
+export const getAmapSecurityCode = () => import.meta.env.VITE_AMAP_SECURITY_CODE || '';
+export const isAmapConfigured = () => Boolean(getAmapKey());
 
 export const loadAmap = () => {
   const key = getAmapKey();
+  const securityCode = getAmapSecurityCode();
 
   if (!key) {
     return Promise.reject(new Error('missing-amap-key'));
+  }
+
+  if (securityCode) {
+    window._AMapSecurityConfig = {
+      securityJsCode: securityCode,
+    };
   }
 
   if (window.AMap) {

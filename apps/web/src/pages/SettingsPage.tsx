@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapPickerModal } from '../components/MapPickerModal';
 import { SectionCard } from '../components/SectionCard';
 import { useAppState } from '../hooks/useAppState';
+import { isAmapConfigured } from '../services/amap';
 import { maskPhone } from '../services/storage';
 
 export const SettingsPage = () => {
@@ -54,6 +55,13 @@ export const SettingsPage = () => {
           <div className='rounded-2xl bg-slate-50 p-4'>
             <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前保存手机号</p>
             <p className='mt-3 text-sm font-medium text-slate-800'>{maskPhone(session?.phone || '') || '未保存'}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>地图配置状态</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{isAmapConfigured() ? '已检测到高德地图 Key' : '未配置高德地图 Key'}</p>
+            <p className='mt-2 text-sm text-slate-500'>
+              生产环境默认读取 `apps/web/.env.production` 中的 `VITE_AMAP_KEY` 和 `VITE_AMAP_SECURITY_CODE`。
+            </p>
           </div>
         </div>
       </SectionCard>
