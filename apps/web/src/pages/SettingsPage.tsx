@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { LocationPreviewMap } from '../components/LocationPreviewMap';
 import { SectionCard } from '../components/SectionCard';
 import { useAppState } from '../hooks/useAppState';
+import { isAmapConfigured } from '../services/amap';
 import { maskPhone } from '../services/storage';
 
 export const SettingsPage = () => {
@@ -52,6 +54,10 @@ export const SettingsPage = () => {
           <div className='rounded-2xl bg-slate-50 p-4'>
             <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前保存手机号</p>
             <p className='mt-3 text-sm font-medium text-slate-800'>{maskPhone(session?.phone || '') || '未保存'}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>地图预览配置</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{isAmapConfigured() ? '已配置高德 JS API Key，可显示地图预览' : '未配置高德 JS API Key，仅保留经纬度输入'}</p>
           </div>
         </div>
       </SectionCard>
@@ -106,6 +112,10 @@ export const SettingsPage = () => {
               placeholder='例如 34.817038'
             />
           </label>
+
+          <div className='lg:col-span-2'>
+            <LocationPreviewMap lon={lon} lat={lat} address={address} />
+          </div>
 
           <div className='lg:col-span-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <p className='text-sm text-slate-500'>{status}</p>

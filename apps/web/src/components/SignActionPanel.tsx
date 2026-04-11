@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
+import { LocationPreviewMap } from './LocationPreviewMap';
 import { api, hasAmapKey, signTypeLabel } from '../services/api';
 import { StatusBadge } from './StatusBadge';
 
@@ -217,6 +218,10 @@ export const SignActionPanel = () => {
             <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
             <input value={lat} onChange={(event) => setLat(event.target.value)} className={fieldClassName} />
           </label>
+
+          <div className='lg:col-span-2'>
+            <LocationPreviewMap lon={lon} lat={lat} address={address} />
+          </div>
         </div>
       ) : null}
 

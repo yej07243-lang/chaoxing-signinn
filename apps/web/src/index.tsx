@@ -11,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { LogsPage } from './pages/LogsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { SignPage } from './pages/SignPage';
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
@@ -29,6 +30,7 @@ root.render(
             }
           >
             <Route index element={<DashboardPage />} />
+            <Route path='/sign' element={<SignPage />} />
             <Route path='/courses' element={<CoursesPage />} />
             <Route path='/logs' element={<LogsPage />} />
             <Route path='/settings' element={<SettingsPage />} />

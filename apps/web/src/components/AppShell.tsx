@@ -5,6 +5,7 @@ import { maskPhone } from '../services/storage';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
+  { to: '/sign', label: '签到' },
   { to: '/courses', label: '课程' },
   { to: '/logs', label: '日志' },
   { to: '/settings', label: '设置' },

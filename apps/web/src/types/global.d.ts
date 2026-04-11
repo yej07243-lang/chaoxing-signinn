@@ -91,4 +91,7 @@ interface SignActionPayload {
 
 interface Window {
   AMap?: any;
+  _AMapSecurityConfig?: {
+    securityJsCode?: string;
+  };
 }

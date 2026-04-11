@@ -1,7 +1,5 @@
 import React from 'react';
-import { QrImageSignCard } from '../components/QrImageSignCard';
 import { SectionCard } from '../components/SectionCard';
-import { SignActionPanel } from '../components/SignActionPanel';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAppState } from '../hooks/useAppState';
 import { maskPhone } from '../services/storage';
@@ -97,12 +95,13 @@ export const DashboardPage = () => {
         </SectionCard>
       </div>
 
-      <SectionCard title='立即签到' description='保留后端原有接口，不改变业务逻辑，只重做前端交互。'>
-        <SignActionPanel />
-      </SectionCard>
-
-      <SectionCard title='二维码图片签到' description='不阻塞主流程。即使当前没有检测到活动，也可以直接上传二维码图片完成签到。'>
-        <QrImageSignCard />
+      <SectionCard title='签到入口' description='可选的签到方式已集中到侧边栏的“签到”页面，首页保留检测和快速发起。'>
+        <div className='rounded-3xl bg-slate-50/80 p-6'>
+          <p className='text-base font-semibold text-slate-900'>前往“签到”页面</p>
+          <p className='mt-2 text-sm leading-6 text-slate-500'>
+            在“签到”页面中可以选择当前活动签到、拍照签到、位置签到和二维码图片签到。
+          </p>
+        </div>
       </SectionCard>
     </div>
   );
