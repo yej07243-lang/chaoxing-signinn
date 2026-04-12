@@ -1,181 +1,387 @@
-import React, { useState } from 'react';
-import { api, hasAmapKey } from '../services/api';
+import React, { useEffect, useMemo, useState } from 'react';
+import { api } from '../services/api';
+import { isAmapConfigured } from '../services/amap';
 import { LocationPreviewMap } from './LocationPreviewMap';
-import { StatusBadge } from './StatusBadge';
 
 const fieldClassName =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
+
+type NoticeTone = 'idle' | 'success' | 'warning' | 'danger';
+type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
+
+const noticeClassName: Record<NoticeTone, string> = {
+  idle: 'border-slate-200 bg-slate-50 text-slate-600',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  warning: 'border-amber-200 bg-amber-50 text-amber-700',
+  danger: 'border-rose-200 bg-rose-50 text-rose-700',
+};
+
+const parseErrorMessage = (error: unknown, mode: 'search' | 'reverse') => {
+  if (!(error instanceof Error)) {
+    return mode === 'search' ? '地址解析失败，请稍后重试。' : '地址反查失败，请稍后重试。';
+  }
+
+  switch (error.message) {
+    case 'missing-amap-key':
+      return '服务器未配置高德地图 Key，暂时无法自动解析地址。';
+    case 'empty-address':
+      return '请输入地址或地点名称后再搜索。';
+    case 'empty-location':
+      return '请先填写经度和纬度。';
+    case 'geocode-not-found':
+      return '没有找到匹配的地址，请换一个更具体的地点名称。';
+    case 'geocode-invalid-location':
+      return '地址解析到了结果，但坐标数据无效，请换一个地址重试。';
+    case 'reverse-geocode-not-found':
+      return '无法根据当前经纬度反查地址，请检查坐标是否正确。';
+    default:
+      if (error.message.startsWith('amap-request-failed:')) {
+        return '地址服务请求失败，请稍后重试。';
+      }
+      return mode === 'search' ? '地址解析失败，请换一个关键词再试。' : '地址反查失败，请检查坐标后再试。';
+  }
+};
 
 export const AddressConfigPanel = ({
   value,
   onChange,
   onSave,
   saveStatus,
+  onUseForSign,
+  useStatus,
+  useDisabled,
+  useButtonLabel = '用该位置签到',
 }: {
   value: AddressItem;
   onChange: (next: AddressItem) => void;
   onSave?: () => Promise<void> | void;
   saveStatus?: string;
+  onUseForSign?: () => Promise<void> | void;
+  useStatus?: string;
+  useDisabled?: boolean;
+  useButtonLabel?: string;
 }) => {
-  const [status, setStatus] = useState('');
-  const [loading, setLoading] = useState<'geocode' | 'reverse' | 'save' | ''>('');
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
+  const [notice, setNotice] = useState<{ tone: NoticeTone; text: string }>({
+    tone: 'idle',
+    text: '输入地址后直接搜索，成功后会自动填充经纬度。',
+  });
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<'save' | 'use' | ''>('');
+  const [autoSearchSeed, setAutoSearchSeed] = useState(0);
+  const [lastResolvedKeyword, setLastResolvedKeyword] = useState('');
 
-  const update = (patch: Partial<AddressItem>) => {
+  const canSearch = value.address.trim().length > 0;
+  const hasResolvedLocation = Boolean(value.address.trim() && value.lon.trim() && value.lat.trim());
+  const mapEnabled = advancedOpen && mapOpen && isAmapConfigured();
+
+  useEffect(() => {
+    if (!autoSearchSeed) return;
+
+    const keyword = value.address.trim();
+    if (!keyword || keyword === lastResolvedKeyword) return;
+
+    const timer = window.setTimeout(() => {
+      void resolveAddress('auto');
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [autoSearchSeed, lastResolvedKeyword, value.address]);
+
+  const resultStatusText = useMemo(() => {
+    switch (searchStatus) {
+      case 'loading':
+        return '正在解析地址';
+      case 'success':
+        return '地址解析完成';
+      case 'error':
+        return '地址解析失败';
+      default:
+        return hasResolvedLocation ? '已就绪，可直接保存或用于位置签到' : '等待搜索';
+    }
+  }, [hasResolvedLocation, searchStatus]);
+
+  const updateValue = (patch: Partial<AddressItem>) => {
     onChange({
       ...value,
       ...patch,
     });
   };
 
-  const resolveAddress = async () => {
+  const resolveAddress = async (source: 'button' | 'enter' | 'auto') => {
+    const keyword = value.address.trim();
+    if (!keyword) {
+      setSearchStatus('error');
+      setNotice({
+        tone: 'danger',
+        text: '请输入地址或地点名称后再搜索。',
+      });
+      return;
+    }
+
+    if (source !== 'auto' || keyword !== lastResolvedKeyword) {
+      setSearchStatus('loading');
+      setNotice({
+        tone: 'idle',
+        text: source === 'auto' ? '正在自动解析地址…' : '正在搜索地址…',
+      });
+    }
+
     try {
-      setLoading('geocode');
-      setStatus('正在解析地址');
-      const result = await api.geocodeAddress(value.address);
+      const result = await api.geocodeAddress(keyword);
       onChange({
         address: result.formattedAddress,
         lon: result.lon,
         lat: result.lat,
       });
-      setStatus('地址解析完成');
+      setLastResolvedKeyword(result.formattedAddress);
+      setSearchStatus('success');
+      setNotice({
+        tone: 'success',
+        text: '地址已解析成功，当前位置可以直接保存或用于位置签到。',
+      });
     } catch (error) {
-      if (error instanceof Error && error.message === 'missing-amap-key') {
-        setStatus('未配置高德 Key，无法自动解析地址');
-      } else if (error instanceof Error && error.message === 'empty-address') {
-        setStatus('请先输入地址');
-      } else {
-        setStatus('地址解析失败，请调整关键词或手动填写');
-      }
-    } finally {
-      setLoading('');
+      setSearchStatus('error');
+      setNotice({
+        tone: 'danger',
+        text: parseErrorMessage(error, 'search'),
+      });
     }
   };
 
   const reverseLookup = async () => {
+    setSearchStatus('loading');
+    setNotice({
+      tone: 'idle',
+      text: '正在根据经纬度反查地址…',
+    });
+
     try {
-      setLoading('reverse');
-      setStatus('正在根据经纬度反查地址');
       const result = await api.reverseGeocode(value.lon, value.lat);
       onChange({
         address: result.formattedAddress,
         lon: result.lon,
         lat: result.lat,
       });
-      setStatus('地址反查完成');
+      setLastResolvedKeyword(result.formattedAddress);
+      setSearchStatus('success');
+      setNotice({
+        tone: 'success',
+        text: '已根据经纬度反查出地址。',
+      });
     } catch (error) {
-      if (error instanceof Error && error.message === 'missing-amap-key') {
-        setStatus('未配置高德 Key，无法自动反查地址');
-      } else if (error instanceof Error && error.message === 'empty-location') {
-        setStatus('请先填写经纬度');
-      } else {
-        setStatus('地址反查失败，请检查坐标是否有效');
-      }
-    } finally {
-      setLoading('');
+      setSearchStatus('error');
+      setNotice({
+        tone: 'danger',
+        text: parseErrorMessage(error, 'reverse'),
+      });
     }
   };
 
-  const save = async () => {
+  const runSave = async () => {
     if (!onSave) return;
     try {
-      setLoading('save');
+      setLoadingAction('save');
       await onSave();
+      setNotice({
+        tone: 'success',
+        text: saveStatus || '默认地址已保存。',
+      });
     } finally {
-      setLoading('');
+      setLoadingAction('');
+    }
+  };
+
+  const runUse = async () => {
+    if (!onUseForSign) return;
+    try {
+      setLoadingAction('use');
+      await onUseForSign();
+    } finally {
+      setLoadingAction('');
     }
   };
 
   return (
-    <div className='space-y-5'>
-      <div className='flex flex-wrap items-center gap-3'>
-        <StatusBadge tone='neutral'>手动输入</StatusBadge>
-        <StatusBadge tone='neutral'>地址解析</StatusBadge>
-        <StatusBadge tone='neutral'>坐标反查</StatusBadge>
-        <StatusBadge tone={hasAmapKey() ? 'success' : 'warning'}>{hasAmapKey() ? '地图选点可用' : '地图功能未配置'}</StatusBadge>
-      </div>
+    <div className='space-y-6'>
+      <section className='space-y-4'>
+        <div>
+          <h3 className='text-base font-semibold text-slate-900'>地址输入</h3>
+          <p className='mt-1 text-sm text-slate-500'>输入地址或地点名称，系统会自动尝试解析，也可以手动点击搜索。</p>
+        </div>
 
-      <div className='grid gap-4 lg:grid-cols-2'>
-        <label className='block lg:col-span-2'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
+        <div className='flex flex-col gap-3 sm:flex-row'>
           <input
             value={value.address}
-            onChange={(event) => update({ address: event.target.value })}
-            className={fieldClassName}
-            placeholder='可输入教学楼、宿舍、校区等关键词'
+            onChange={(event) => {
+              updateValue({ address: event.target.value });
+              setAutoSearchSeed((current) => current + 1);
+              if (searchStatus === 'error') {
+                setSearchStatus('idle');
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void resolveAddress('enter');
+              }
+            }}
+            className={`${fieldClassName} flex-1`}
+            placeholder='请输入地址 / 地点名称'
           />
-        </label>
-
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
-          <input
-            value={value.lon}
-            onChange={(event) => update({ lon: event.target.value })}
-            className={fieldClassName}
-            placeholder='例如 113.516288'
-          />
-        </label>
-
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
-          <input
-            value={value.lat}
-            onChange={(event) => update({ lat: event.target.value })}
-            className={fieldClassName}
-            placeholder='例如 34.817038'
-          />
-        </label>
-
-        <div className='lg:col-span-2 flex flex-wrap gap-3'>
           <button
             type='button'
-            onClick={resolveAddress}
-            disabled={loading !== ''}
-            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+            onClick={() => void resolveAddress('button')}
+            disabled={!canSearch || searchStatus === 'loading'}
+            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
           >
-            {loading === 'geocode' ? '解析中...' : '地址解析坐标'}
+            {searchStatus === 'loading' ? '搜索中...' : '搜索地址'}
           </button>
-          <button
-            type='button'
-            onClick={reverseLookup}
-            disabled={loading !== ''}
-            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            {loading === 'reverse' ? '反查中...' : '坐标反查地址'}
-          </button>
-          <button
-            type='button'
-            onClick={() => onChange({ address: '', lon: '', lat: '' })}
-            disabled={loading !== ''}
-            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            清空
-          </button>
+        </div>
+
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${noticeClassName[notice.tone]}`}>{notice.text}</div>
+      </section>
+
+      <section className='space-y-4'>
+        <div>
+          <h3 className='text-base font-semibold text-slate-900'>解析结果</h3>
+          <p className='mt-1 text-sm text-slate-500'>搜索成功后会在这里展示签到所需的位置参数。</p>
+        </div>
+
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>详细地址</p>
+            <p className='mt-3 break-words text-sm font-medium text-slate-800'>{value.address.trim() || '尚未解析出地址'}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>经度</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{value.lon.trim() || '未获取'}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>纬度</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{value.lat.trim() || '未获取'}</p>
+          </div>
+          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
+            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前状态</p>
+            <p className='mt-3 text-sm font-medium text-slate-800'>{resultStatusText}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className='space-y-4'>
+        <div>
+          <h3 className='text-base font-semibold text-slate-900'>主操作</h3>
+          <p className='mt-1 text-sm text-slate-500'>优先使用这里的两个操作，不需要手动理解经纬度。</p>
+        </div>
+
+        <div className='flex flex-col gap-3 sm:flex-row'>
           {onSave ? (
             <button
               type='button'
-              onClick={() => void save()}
-              disabled={loading !== ''}
-              className='rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+              onClick={() => void runSave()}
+              disabled={!hasResolvedLocation || loadingAction !== ''}
+              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
             >
-              {loading === 'save' ? '保存中...' : '保存为默认地址'}
+              {loadingAction === 'save' ? '保存中...' : '保存为默认地址'}
+            </button>
+          ) : null}
+
+          {onUseForSign ? (
+            <button
+              type='button'
+              onClick={() => void runUse()}
+              disabled={!hasResolvedLocation || useDisabled || loadingAction !== ''}
+              className='h-12 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {loadingAction === 'use' ? '提交中...' : useButtonLabel}
             </button>
           ) : null}
         </div>
 
-        <div className='lg:col-span-2'>
-          <LocationPreviewMap
-            lon={value.lon}
-            lat={value.lat}
-            address={value.address}
-            interactive
-            onSelect={(next) => {
-              onChange(next);
-            }}
-          />
-        </div>
-      </div>
+        {saveStatus || useStatus ? (
+          <p className='text-sm text-slate-500'>{useStatus || saveStatus}</p>
+        ) : null}
+      </section>
 
-      <p className='text-sm text-slate-500'>{status || saveStatus || '位置签到、二维码签到、二维码图片签到都会复用这里的地址配置。'}</p>
+      <section className='rounded-2xl border border-slate-200 bg-slate-50/80 p-4'>
+        <button
+          type='button'
+          onClick={() => setAdvancedOpen((current) => !current)}
+          className='flex w-full items-center justify-between text-left text-sm font-semibold text-slate-900'
+        >
+          <span>高级选项</span>
+          <span className='text-slate-400'>{advancedOpen ? '收起' : '展开'}</span>
+        </button>
+
+        {advancedOpen ? (
+          <div className='mt-4 space-y-5'>
+            <div className='grid gap-4 lg:grid-cols-2'>
+              <label className='block'>
+                <span className='mb-2 block text-sm font-medium text-slate-700'>手动输入经度</span>
+                <input
+                  value={value.lon}
+                  onChange={(event) => updateValue({ lon: event.target.value })}
+                  className={fieldClassName}
+                  placeholder='例如 113.516288'
+                />
+              </label>
+
+              <label className='block'>
+                <span className='mb-2 block text-sm font-medium text-slate-700'>手动输入纬度</span>
+                <input
+                  value={value.lat}
+                  onChange={(event) => updateValue({ lat: event.target.value })}
+                  className={fieldClassName}
+                  placeholder='例如 34.817038'
+                />
+              </label>
+            </div>
+
+            <div className='flex flex-wrap gap-3'>
+              <button
+                type='button'
+                onClick={() => void reverseLookup()}
+                disabled={searchStatus === 'loading'}
+                className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+              >
+                坐标反查地址
+              </button>
+            </div>
+
+            {isAmapConfigured() ? (
+              <div className='space-y-3'>
+                <button
+                  type='button'
+                  onClick={() => setMapOpen((current) => !current)}
+                  className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900'
+                >
+                  {mapOpen ? '关闭地图选点' : '打开地图选点'}
+                </button>
+
+                {mapEnabled ? (
+                  <LocationPreviewMap
+                    lon={value.lon}
+                    lat={value.lat}
+                    address={value.address}
+                    interactive
+                    onSelect={(next) => {
+                      onChange(next);
+                      setSearchStatus('success');
+                      setNotice({
+                        tone: 'success',
+                        text: '已从地图更新位置，可以直接保存或用于位置签到。',
+                      });
+                    }}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
     </div>
   );
 };

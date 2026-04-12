@@ -6,7 +6,7 @@ import { SignActionPanel } from '../components/SignActionPanel';
 import { useAppState } from '../hooks/useAppState';
 
 export const SignPage = () => {
-  const { activity, activityState, session, updatePresetAddress } = useAppState();
+  const { activity, activityState, session, updatePresetAddress, executeSignAction, signPending } = useAppState();
   const hasTask = activityState === 'ready' && !!activity?.activeId;
   const preset = session?.config.monitor.presetAddress?.[0];
   const [address, setAddress] = useState<AddressItem>({
@@ -15,6 +15,7 @@ export const SignPage = () => {
     lat: '',
   });
   const [saveStatus, setSaveStatus] = useState('当前地址配置会被位置签到、二维码签到和二维码图片签到共用。');
+  const [useStatus, setUseStatus] = useState('位置签到时，优先在这里完成地址搜索并直接提交。');
 
   useEffect(() => {
     setAddress({
@@ -29,6 +30,18 @@ export const SignPage = () => {
     setSaveStatus('默认地址已保存到当前账号');
   };
 
+  const useForLocationSign = async () => {
+    if (activity?.otherId !== 4) {
+      setUseStatus(hasTask ? '当前任务不是位置签到，请在下方选择对应签到方式。' : '当前没有可用的位置签到任务。');
+      return;
+    }
+
+    await executeSignAction({
+      address,
+    });
+    setUseStatus('已提交位置签到请求，请查看下方最近结果。');
+  };
+
   return (
     <div className='space-y-6'>
       <div>
@@ -41,9 +54,17 @@ export const SignPage = () => {
 
       <SectionCard
         title='地址配置'
-        description='这一栏单独负责维护签到地址。保存后会写回当前账号的默认地址配置。'
+        description='先搜索地址，再决定是保存为默认地址，还是直接用于当前的位置签到。'
       >
-        <AddressConfigPanel value={address} onChange={setAddress} onSave={saveAddress} saveStatus={saveStatus} />
+        <AddressConfigPanel
+          value={address}
+          onChange={setAddress}
+          onSave={saveAddress}
+          saveStatus={saveStatus}
+          onUseForSign={useForLocationSign}
+          useStatus={useStatus}
+          useDisabled={signPending || activity?.otherId !== 4}
+        />
       </SectionCard>
 
       <SectionCard

@@ -101,21 +101,16 @@ export const SignActionPanel = ({
       {
         id: 'location',
         title: '位置签到',
-        description: '使用上方地址配置中的坐标和详细地址提交。',
+        description: '位置签到已经前移到上方地址配置的主操作区。先搜索地址，再直接点击“用该位置签到”。',
         matches: currentType === 4,
         renderBody: () => (
           <div className='space-y-4'>
             <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
               当前地址：{address.address || '未填写'} ｜ 经度：{address.lon || '未填写'} ｜ 纬度：{address.lat || '未填写'}
             </div>
-            <button
-              type='button'
-              onClick={() => void submit({})}
-              disabled={!hasTask || currentType !== 4 || !address.address || !address.lon || !address.lat || signPending}
-              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
-            >
-              {signPending && currentType === 4 ? '处理中...' : '使用当前地址签到'}
-            </button>
+            <div className='rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500'>
+              {currentType === 4 ? '当前任务是位置签到，请在上方主操作区直接提交。' : '这里只保留说明，真正的入口在上方地址配置区。'}
+            </div>
           </div>
         ),
       },
