@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LocationPreviewMap } from '../components/LocationPreviewMap';
+import { AddressConfigPanel } from '../components/AddressConfigPanel';
 import { SectionCard } from '../components/SectionCard';
 import { useAppState } from '../hooks/useAppState';
 import { isAmapConfigured } from '../services/amap';
@@ -120,38 +120,16 @@ export const SettingsPage = () => {
             />
           </label>
 
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
-            <input
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-              className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900'
-              placeholder='位置签到时使用'
-            />
-          </label>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
-            <input
-              value={lon}
-              onChange={(event) => setLon(event.target.value)}
-              className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900'
-              placeholder='例如 113.516288'
-            />
-          </label>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
-            <input
-              value={lat}
-              onChange={(event) => setLat(event.target.value)}
-              className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900'
-              placeholder='例如 34.817038'
-            />
-          </label>
-
           <div className='lg:col-span-2'>
-            <LocationPreviewMap lon={lon} lat={lat} address={address} />
+            <AddressConfigPanel
+              value={{ address, lon, lat }}
+              onChange={(next) => {
+                setAddress(next.address);
+                setLon(next.lon);
+                setLat(next.lat);
+              }}
+              saveStatus='这里修改的是账号默认地址，保存时会重新登录并更新本地存储。'
+            />
           </div>
 
           <div className='lg:col-span-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>

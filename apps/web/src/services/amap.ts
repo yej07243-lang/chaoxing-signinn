@@ -41,7 +41,7 @@ export const loadAmap = () => {
     const script = document.createElement('script');
     script.async = true;
     script.dataset.amapJsapi = 'true';
-    script.src = `${AMAP_JS_API_URL}&key=${encodeURIComponent(key)}&plugin=AMap.Scale,AMap.ToolBar`;
+    script.src = `${AMAP_JS_API_URL}&key=${encodeURIComponent(key)}&plugin=AMap.Scale,AMap.ToolBar,AMap.Geocoder`;
     script.onload = () => {
       if (window.AMap) {
         resolve(window.AMap);

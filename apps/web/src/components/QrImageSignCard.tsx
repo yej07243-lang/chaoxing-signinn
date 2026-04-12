@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
-import { api, hasAmapKey } from '../services/api';
-import { LocationPreviewMap } from './LocationPreviewMap';
 import { StatusBadge } from './StatusBadge';
 
 const fieldClassName =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
 
-export const QrImageSignCard = () => {
-  const { signPending, signQrImage, lastQrSignStatus, session } = useAppState();
-  const preset = session?.config.monitor.presetAddress?.[0];
+export const QrImageSignCard = ({
+  address,
+}: {
+  address: AddressItem;
+}) => {
+  const { signPending, signQrImage, lastQrSignStatus } = useAppState();
   const [qrImage, setQrImage] = useState<File | null>(null);
-  const [address, setAddress] = useState(preset?.address || '');
-  const [lon, setLon] = useState(preset?.lon || '');
-  const [lat, setLat] = useState(preset?.lat || '');
   const [altitude, setAltitude] = useState('100');
-  const [geocodeStatus, setGeocodeStatus] = useState('');
-  const [geocodeLoading, setGeocodeLoading] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,34 +21,8 @@ export const QrImageSignCard = () => {
     await signQrImage({
       qrImage,
       altitude,
-      address: {
-        address: address.trim(),
-        lon: lon.trim(),
-        lat: lat.trim(),
-      },
+      address,
     });
-  };
-
-  const resolveAddress = async () => {
-    try {
-      setGeocodeLoading(true);
-      setGeocodeStatus('正在解析地址');
-      const result = await api.geocodeAddress(address);
-      setLon(result.lon);
-      setLat(result.lat);
-      setAddress(result.formattedAddress);
-      setGeocodeStatus('已获取位置，可直接用于签到');
-    } catch (error) {
-      if (error instanceof Error && error.message === 'missing-amap-key') {
-        setGeocodeStatus('未配置高德 Key，无法自动解析地址');
-      } else if (error instanceof Error && error.message === 'empty-address') {
-        setGeocodeStatus('请先输入地址');
-      } else {
-        setGeocodeStatus('地址解析失败，请调整地址关键词或手动填写经纬度');
-      }
-    } finally {
-      setGeocodeLoading(false);
-    }
   };
 
   return (
@@ -66,7 +36,9 @@ export const QrImageSignCard = () => {
 
       <div>
         <h2 className='text-2xl font-semibold text-slate-950'>上传二维码图片直接签到</h2>
-        <p className='mt-2 text-sm leading-6 text-slate-500'>使用 `html5-qrcode` 在前端解析图片中的二维码 URL，再调用后端新接口完成签到，不依赖当前检测到的活动。</p>
+        <p className='mt-2 text-sm leading-6 text-slate-500'>
+          这个入口不依赖当前检测到的活动，但会复用上方统一配置的地址和坐标。
+        </p>
       </div>
 
       <label className='block'>
@@ -79,51 +51,20 @@ export const QrImageSignCard = () => {
         />
       </label>
 
-      <div className='grid gap-4 lg:grid-cols-2'>
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
-          <input value={lon} onChange={(event) => setLon(event.target.value)} className={fieldClassName} />
-        </label>
+      <label className='block'>
+        <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
+        <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
+      </label>
 
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
-          <input value={lat} onChange={(event) => setLat(event.target.value)} className={fieldClassName} />
-        </label>
-
-        <label className='block lg:col-span-2'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
-          <input value={address} onChange={(event) => setAddress(event.target.value)} className={fieldClassName} />
-        </label>
-
-        <div className='lg:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center'>
-          <button
-            type='button'
-            onClick={resolveAddress}
-            disabled={geocodeLoading}
-            className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            {geocodeLoading ? '获取中...' : '获取位置'}
-          </button>
-          <p className='text-sm text-slate-500'>
-            {geocodeStatus || (hasAmapKey() ? '输入地址后可自动获取经纬度' : '当前未配置高德 Key，只能手动填写经纬度')}
-          </p>
-        </div>
-
-        <label className='block lg:col-span-2'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
-          <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
-        </label>
-
-        <div className='lg:col-span-2'>
-          <LocationPreviewMap lon={lon} lat={lat} address={address} />
-        </div>
+      <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
+        当前地址：{address.address || '未填写'} ｜ 经度：{address.lon || '未填写'} ｜ 纬度：{address.lat || '未填写'}
       </div>
 
       {lastQrSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>结果：{lastQrSignStatus}</div> : null}
 
       <button
         type='submit'
-        disabled={!qrImage || signPending}
+        disabled={!qrImage || !address.address || !address.lon || !address.lat || signPending}
         className='h-14 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
       >
         {signPending ? '识别并签到中...' : '识别二维码并签到'}

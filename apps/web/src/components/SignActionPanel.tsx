@@ -1,255 +1,236 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
-import { LocationPreviewMap } from './LocationPreviewMap';
-import { api, hasAmapKey, signTypeLabel } from '../services/api';
+import { signTypeLabel } from '../services/api';
 import { StatusBadge } from './StatusBadge';
 
 const fieldClassName =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
 
-export const SignActionPanel = () => {
-  const { activity, activityState, session, executeSignAction, signPending } = useAppState();
-  const preset = session?.config.monitor.presetAddress?.[0];
-  const [mode, setMode] = useState<'general' | 'photo'>('general');
+type SignMethodCard = {
+  id: string;
+  title: string;
+  description: string;
+  matches: boolean;
+  renderBody: () => React.ReactNode;
+};
+
+export const SignActionPanel = ({
+  address,
+}: {
+  address: AddressItem;
+}) => {
+  const { activity, activityState, executeSignAction, signPending, lastSignStatus } = useAppState();
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [qrEnc, setQrEnc] = useState('');
   const [qrImage, setQrImage] = useState<File | null>(null);
   const [signCode, setSignCode] = useState('');
-  const [address, setAddress] = useState(preset?.address || '');
-  const [lon, setLon] = useState(preset?.lon || '');
-  const [lat, setLat] = useState(preset?.lat || '');
   const [altitude, setAltitude] = useState('100');
-  const [helperText, setHelperText] = useState('按当前签到类型填写必要信息。');
-  const [geocodeStatus, setGeocodeStatus] = useState('');
-  const [geocodeLoading, setGeocodeLoading] = useState(false);
-
-  useEffect(() => {
-    setAddress(preset?.address || '');
-    setLon(preset?.lon || '');
-    setLat(preset?.lat || '');
-  }, [preset?.address, preset?.lon, preset?.lat]);
-
-  useEffect(() => {
-    setPhotoFile(null);
-    setQrEnc('');
-    setQrImage(null);
-    setSignCode('');
-    setMode('general');
-
-    if (!activity) {
-      setHelperText('按当前签到类型填写必要信息。');
-      return;
-    }
-
-    switch (activity.otherId) {
-      case 2:
-        setHelperText('二维码签到支持直接粘贴 enc，也支持上传二维码图片自动解析。');
-        break;
-      case 4:
-        setHelperText('位置签到将使用这里填写的经纬度和详细地址。');
-        break;
-      case 0:
-        setHelperText('普通 / 拍照签到都在这里处理，可手动切换模式。');
-        break;
-      case 5:
-        setHelperText('签到码签到会携带你输入的签到码提交，若后端返回失败会直接展示原始结果。');
-        break;
-      default:
-        setHelperText('当前类型无需额外参数，可直接提交。');
-        break;
-    }
-  }, [activity?.activeId, activity?.otherId]);
 
   const hasTask = activityState === 'ready' && !!activity?.activeId;
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submit = async (payload: SignActionPayload) => {
     if (!hasTask) return;
-
     await executeSignAction({
-      mode,
-      photoFile,
-      qrEnc,
-      qrImage,
-      signCode,
+      ...payload,
       altitude,
-      address: {
-        address: address.trim(),
-        lon: lon.trim(),
-        lat: lat.trim(),
-      },
+      address,
     });
   };
 
-  const resolveAddress = async () => {
-    try {
-      setGeocodeLoading(true);
-      setGeocodeStatus('正在解析地址');
-      const result = await api.geocodeAddress(address);
-      setLon(result.lon);
-      setLat(result.lat);
-      setAddress(result.formattedAddress);
-      setGeocodeStatus('已获取位置，可直接用于签到');
-    } catch (error) {
-      if (error instanceof Error && error.message === 'missing-amap-key') {
-        setGeocodeStatus('未配置高德 Key，无法自动解析地址');
-      } else if (error instanceof Error && error.message === 'empty-address') {
-        setGeocodeStatus('请先输入地址');
-      } else {
-        setGeocodeStatus('地址解析失败，请调整地址关键词或手动填写经纬度');
-      }
-    } finally {
-      setGeocodeLoading(false);
-    }
-  };
-
-  return (
-    <form className='space-y-5' onSubmit={onSubmit}>
-        <div className='flex flex-wrap items-center gap-3'>
-          <StatusBadge tone={hasTask ? 'success' : 'neutral'}>{hasTask ? '待处理' : '空闲'}</StatusBadge>
-          {activity?.otherId !== undefined ? <StatusBadge>{signTypeLabel(activity.otherId)}</StatusBadge> : null}
-        </div>
-
-        <div>
-          <h2 className='text-2xl font-semibold text-slate-950'>{activity?.name || '当前没有待签到任务'}</h2>
-          <p className='mt-2 text-sm leading-6 text-slate-500'>{helperText}</p>
-        </div>
-
-      {activity?.otherId === 0 ? (
-        <div className='flex flex-wrap gap-3'>
+  const currentType = activity?.otherId;
+  const cards: SignMethodCard[] = [
+      {
+        id: 'general',
+        title: '普通签到',
+        description: '适用于普通签到活动，也可作为拍照签到前的快速判断入口。',
+        matches: currentType === 0,
+        renderBody: () => (
           <button
             type='button'
-            onClick={() => setMode('general')}
-            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-              mode === 'general' ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-700'
-            }`}
+            onClick={() => void submit({ mode: 'general' })}
+            disabled={!hasTask || currentType !== 0 || signPending}
+            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
           >
-            普通签到
+            {signPending && currentType === 0 ? '处理中...' : '提交普通签到'}
           </button>
-          <button
-            type='button'
-            onClick={() => setMode('photo')}
-            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-              mode === 'photo' ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-700'
-            }`}
-          >
-            拍照签到
-          </button>
-        </div>
-      ) : null}
-
-      {(activity?.otherId === 0 && mode === 'photo') ? (
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>签到图片</span>
-          <input
-            type='file'
-            accept='image/*'
-            onChange={(event) => setPhotoFile(event.target.files?.[0] || null)}
-            className={fieldClassName}
-          />
-        </label>
-      ) : null}
-
-        {activity?.otherId === 2 ? (
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>二维码图片</span>
-            <input
-              type='file'
-              accept='image/*'
-              onChange={(event) => setQrImage(event.target.files?.[0] || null)}
-              className={fieldClassName}
-            />
-          </label>
-
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>enc 参数</span>
-            <input
-              value={qrEnc}
-              onChange={(event) => setQrEnc(event.target.value)}
-              className={fieldClassName}
-              placeholder='支持手动粘贴，或上传二维码图片自动解析'
-            />
-          </label>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
-            <input value={lon} onChange={(event) => setLon(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
-            <input value={lat} onChange={(event) => setLat(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
-            <input value={address} onChange={(event) => setAddress(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
-            <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
-          </label>
-        </div>
-      ) : null}
-
-        {activity?.otherId === 4 ? (
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <label className='block lg:col-span-2'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>详细地址</span>
-            <input value={address} onChange={(event) => setAddress(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <div className='lg:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center'>
+        ),
+      },
+      {
+        id: 'photo',
+        title: '拍照签到',
+        description: '上传签到图片后走拍照签到流程，和普通签到并列展示。',
+        matches: currentType === 0,
+        renderBody: () => (
+          <div className='space-y-4'>
+            <label className='block'>
+              <span className='mb-2 block text-sm font-medium text-slate-700'>签到图片</span>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={(event) => setPhotoFile(event.target.files?.[0] || null)}
+                className={fieldClassName}
+              />
+            </label>
             <button
               type='button'
-              onClick={resolveAddress}
-              disabled={geocodeLoading}
-              className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+              onClick={() => void submit({ mode: 'photo', photoFile })}
+              disabled={!hasTask || currentType !== 0 || !photoFile || signPending}
+              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
             >
-              {geocodeLoading ? '获取中...' : '获取位置'}
+              {signPending && currentType === 0 ? '处理中...' : '提交拍照签到'}
             </button>
-            <p className='text-sm text-slate-500'>
-              {geocodeStatus || (hasAmapKey() ? '输入地址后可自动获取经纬度' : '当前未配置高德 Key，只能手动填写经纬度')}
-            </p>
           </div>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>经度</span>
-            <input value={lon} onChange={(event) => setLon(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <label className='block'>
-            <span className='mb-2 block text-sm font-medium text-slate-700'>纬度</span>
-            <input value={lat} onChange={(event) => setLat(event.target.value)} className={fieldClassName} />
-          </label>
-
-          <div className='lg:col-span-2'>
-            <LocationPreviewMap lon={lon} lat={lat} address={address} />
+        ),
+      },
+      {
+        id: 'gesture',
+        title: '手势签到',
+        description: '后端直接走通用签到接口，界面单独保留一个入口，避免看不到这种方式。',
+        matches: currentType === 3,
+        renderBody: () => (
+          <button
+            type='button'
+            onClick={() => void submit({})}
+            disabled={!hasTask || currentType !== 3 || signPending}
+            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+          >
+            {signPending && currentType === 3 ? '处理中...' : '提交手势签到'}
+          </button>
+        ),
+      },
+      {
+        id: 'location',
+        title: '位置签到',
+        description: '使用上方地址配置中的坐标和详细地址提交。',
+        matches: currentType === 4,
+        renderBody: () => (
+          <div className='space-y-4'>
+            <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
+              当前地址：{address.address || '未填写'} ｜ 经度：{address.lon || '未填写'} ｜ 纬度：{address.lat || '未填写'}
+            </div>
+            <button
+              type='button'
+              onClick={() => void submit({})}
+              disabled={!hasTask || currentType !== 4 || !address.address || !address.lon || !address.lat || signPending}
+              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            >
+              {signPending && currentType === 4 ? '处理中...' : '使用当前地址签到'}
+            </button>
           </div>
-        </div>
-      ) : null}
+        ),
+      },
+      {
+        id: 'qrcode',
+        title: '二维码签到',
+        description: '支持上传二维码图片自动解析 enc，也支持手动粘贴 enc；位置参数同样复用地址配置。',
+        matches: currentType === 2,
+        renderBody: () => (
+          <div className='space-y-4'>
+            <label className='block'>
+              <span className='mb-2 block text-sm font-medium text-slate-700'>二维码图片</span>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={(event) => setQrImage(event.target.files?.[0] || null)}
+                className={fieldClassName}
+              />
+            </label>
 
-      {activity?.otherId === 5 ? (
-        <label className='block'>
-          <span className='mb-2 block text-sm font-medium text-slate-700'>签到码</span>
-          <input
-            value={signCode}
-            onChange={(event) => setSignCode(event.target.value)}
-            className={fieldClassName}
-            placeholder='输入老师发布的签到码'
-          />
-        </label>
-      ) : null}
+            <label className='block'>
+              <span className='mb-2 block text-sm font-medium text-slate-700'>enc 参数</span>
+              <input
+                value={qrEnc}
+                onChange={(event) => setQrEnc(event.target.value)}
+                className={fieldClassName}
+                placeholder='可留空，上传二维码图片后自动识别'
+              />
+            </label>
 
-        <button
-          type='submit'
-          disabled={!hasTask || signPending}
-          className='h-14 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
-        >
-          {signPending ? '处理中...' : activity?.otherId === 4 ? '使用该位置签到' : '立即签到'}
-        </button>
-      </form>
+            <label className='block'>
+              <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
+              <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
+            </label>
+
+            <button
+              type='button'
+              onClick={() => void submit({ qrEnc, qrImage })}
+              disabled={!hasTask || currentType !== 2 || (!qrEnc.trim() && !qrImage) || !address.address || !address.lon || !address.lat || signPending}
+              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            >
+              {signPending && currentType === 2 ? '处理中...' : '提交二维码签到'}
+            </button>
+          </div>
+        ),
+      },
+      {
+        id: 'code',
+        title: '签到码签到',
+        description: '输入老师发布的签到码后直接提交。',
+        matches: currentType === 5,
+        renderBody: () => (
+          <div className='space-y-4'>
+            <label className='block'>
+              <span className='mb-2 block text-sm font-medium text-slate-700'>签到码</span>
+              <input
+                value={signCode}
+                onChange={(event) => setSignCode(event.target.value)}
+                className={fieldClassName}
+                placeholder='输入签到码'
+              />
+            </label>
+            <button
+              type='button'
+              onClick={() => void submit({ signCode })}
+              disabled={!hasTask || currentType !== 5 || !signCode.trim() || signPending}
+              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            >
+              {signPending && currentType === 5 ? '处理中...' : '提交签到码签到'}
+            </button>
+          </div>
+        ),
+      },
+    ];
+
+  return (
+    <div className='space-y-5'>
+      <div className='flex flex-wrap items-center gap-3'>
+        <StatusBadge tone={hasTask ? 'success' : 'neutral'}>{hasTask ? '检测到待签到任务' : '当前无活动'}</StatusBadge>
+        {activity?.otherId !== undefined ? <StatusBadge>{signTypeLabel(activity.otherId)}</StatusBadge> : null}
+      </div>
+
+      <div>
+        <h2 className='text-2xl font-semibold text-slate-950'>{activity?.name || '当前没有待签到任务'}</h2>
+        <p className='mt-2 text-sm leading-6 text-slate-500'>
+          所有签到方式都固定展示在这里。当前活动对应的方式会高亮可用，其余方式保留为可见但不可提交状态。
+        </p>
+      </div>
+
+      <div className='grid gap-4 xl:grid-cols-2'>
+        {cards.map((card) => {
+          const disabled = !hasTask || !card.matches;
+
+          return (
+            <section
+              key={card.id}
+              className={`rounded-3xl border p-5 transition ${
+                card.matches ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'
+              }`}
+            >
+              <div className='flex flex-wrap items-center gap-3'>
+                <StatusBadge tone={card.matches ? 'success' : 'neutral'}>{card.title}</StatusBadge>
+                <StatusBadge tone={disabled ? 'warning' : 'success'}>
+                  {disabled ? (hasTask ? `当前活动不是${card.title}` : '等待活动') : '可提交'}
+                </StatusBadge>
+              </div>
+
+              <p className='mt-4 text-sm leading-6 text-slate-500'>{card.description}</p>
+              <div className='mt-5'>{card.renderBody()}</div>
+            </section>
+          );
+        })}
+      </div>
+
+      {lastSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>最近结果：{lastSignStatus}</div> : null}
+    </div>
   );
 };

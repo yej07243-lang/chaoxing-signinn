@@ -42,6 +42,7 @@ interface AppContextValue {
   executeSignAction: (payload: SignActionPayload) => Promise<void>;
   signQrImage: (payload: SignActionPayload) => Promise<void>;
   updateAccount: (phone: string, password: string, address: AddressItem) => Promise<boolean>;
+  updatePresetAddress: (address: AddressItem) => void;
   switchAccount: (phone: string) => Promise<void>;
   removeSavedAccount: (phone: string) => void;
 }
@@ -335,6 +336,30 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return true;
   };
 
+  const updatePresetAddress = (address: AddressItem) => {
+    if (!session) return;
+
+    const nextSession: StoredSession = {
+      ...session,
+      config: {
+        ...session.config,
+        monitor: {
+          ...session.config.monitor,
+          presetAddress: [
+            {
+              address: address.address.trim(),
+              lon: address.lon.trim(),
+              lat: address.lat.trim(),
+            },
+          ],
+        },
+      },
+    };
+
+    persistSession(nextSession);
+    pushLog({ level: 'success', source: 'sign', message: '签到默认地址已更新' }, nextSession);
+  };
+
   const switchAccount = async (phone: string) => {
     const target = accounts.find((item) => item.phone === phone);
     if (!target) return;
@@ -453,6 +478,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     executeSignAction,
     signQrImage,
     updateAccount,
+    updatePresetAddress,
     switchAccount,
     removeSavedAccount,
   }), [session, accounts, activity, activityState, authState, logs, courses, loginStatus, lastSignStatus, lastQrSignStatus, monitorActive, currentApiBaseUrl, signPending]);

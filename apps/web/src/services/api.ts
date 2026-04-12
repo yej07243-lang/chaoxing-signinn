@@ -90,6 +90,21 @@ const requestAmap = async (address: string) => {
   return response.json() as Promise<any>;
 };
 
+const requestAmapReverse = async (lon: string, lat: string) => {
+  const key = (import.meta.env.VITE_AMAP_KEY || '').trim();
+  if (!key) {
+    throw new Error('missing-amap-key');
+  }
+
+  const location = `${lon},${lat}`;
+  const url = `https://restapi.amap.com/v3/geocode/regeo?key=${encodeURIComponent(key)}&location=${encodeURIComponent(location)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`amap-request-failed:${response.status}`);
+  }
+  return response.json() as Promise<any>;
+};
+
 const credentialsPayload = (session: StoredSession) => ({
   uf: session.uf,
   _d: session._d,
@@ -278,6 +293,26 @@ export const api = {
       lon,
       lat,
       formattedAddress: first.formatted_address || keyword,
+    };
+  },
+
+  async reverseGeocode(lon: string, lat: string): Promise<GeocodeResult> {
+    const normalizedLon = lon.trim();
+    const normalizedLat = lat.trim();
+
+    if (!normalizedLon || !normalizedLat) {
+      throw new Error('empty-location');
+    }
+
+    const data = await requestAmapReverse(normalizedLon, normalizedLat);
+    if (data.status !== '1' || !data.regeocode) {
+      throw new Error('reverse-geocode-not-found');
+    }
+
+    return {
+      lon: normalizedLon,
+      lat: normalizedLat,
+      formattedAddress: data.regeocode.formatted_address || `${normalizedLon}, ${normalizedLat}`,
     };
   },
 };
