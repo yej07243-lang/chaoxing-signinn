@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import { StatusBadge } from './StatusBadge';
 
-const fieldClassName =
-  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
+const fieldClassName = 'cx-input';
 
 export const QrImageSignCard = ({
   address,
@@ -35,14 +34,14 @@ export const QrImageSignCard = ({
       </div>
 
       <div>
-        <h2 className='text-2xl font-semibold text-slate-950'>上传二维码图片直接签到</h2>
-        <p className='mt-2 text-sm leading-6 text-slate-500'>
+        <h2 className='font-display text-3xl font-semibold text-[color:var(--cx-text)]'>上传二维码图片直接签到</h2>
+        <p className='mt-2 text-sm leading-6 text-[color:var(--cx-text-muted)]'>
           这个入口不依赖当前检测到的活动，但会复用上方统一配置的地址和坐标。
         </p>
       </div>
 
       <label className='block'>
-        <span className='mb-2 block text-sm font-medium text-slate-700'>二维码图片</span>
+        <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>二维码图片</span>
         <input
           type='file'
           accept='image/*'
@@ -52,20 +51,20 @@ export const QrImageSignCard = ({
       </label>
 
       <label className='block'>
-        <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
+        <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>海拔</span>
         <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
       </label>
 
-      <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
+      <div className='cx-muted-block text-sm text-[color:var(--cx-text-muted)]'>
         当前地址：{address.address || '未填写'} ｜ 经度：{address.lon || '未填写'} ｜ 纬度：{address.lat || '未填写'}
       </div>
 
-      {lastQrSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>结果：{lastQrSignStatus}</div> : null}
+      {lastQrSignStatus ? <div className='cx-muted-block text-sm text-[color:var(--cx-text)]'>结果：{lastQrSignStatus}</div> : null}
 
       <button
         type='submit'
         disabled={!qrImage || !address.address || !address.lon || !address.lat || signPending}
-        className='h-14 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+        className='cx-btn-primary h-14'
       >
         {signPending ? '识别并签到中...' : '识别二维码并签到'}
       </button>

@@ -3,14 +3,13 @@ import { api } from '../services/api';
 import { isAmapConfigured } from '../services/amap';
 import { LocationPreviewMap } from './LocationPreviewMap';
 
-const fieldClassName =
-  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
+const fieldClassName = 'cx-input';
 
 type NoticeTone = 'idle' | 'success' | 'warning' | 'danger';
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 const noticeClassName: Record<NoticeTone, string> = {
-  idle: 'border-slate-200 bg-slate-50 text-slate-600',
+  idle: 'border-[color:var(--cx-border)] bg-white/65 text-[color:var(--cx-text-muted)]',
   success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   warning: 'border-amber-200 bg-amber-50 text-amber-700',
   danger: 'border-rose-200 bg-rose-50 text-rose-700',
@@ -209,8 +208,8 @@ export const AddressConfigPanel = ({
     <div className='space-y-6'>
       <section className='space-y-4'>
         <div>
-          <h3 className='text-base font-semibold text-slate-900'>地址输入</h3>
-          <p className='mt-1 text-sm text-slate-500'>输入地址或地点名称，系统会自动尝试解析，也可以手动点击搜索。</p>
+          <h3 className='font-display text-2xl font-semibold text-[color:var(--cx-text)]'>地址输入</h3>
+          <p className='mt-1 text-sm leading-6 text-[color:var(--cx-text-muted)]'>输入地址或地点名称，系统会自动尝试解析，也可以手动点击搜索。</p>
         </div>
 
         <div className='flex flex-col gap-3 sm:flex-row'>
@@ -236,7 +235,7 @@ export const AddressConfigPanel = ({
             type='button'
             onClick={() => void resolveAddress('button')}
             disabled={!canSearch || searchStatus === 'loading'}
-            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            className='cx-btn-primary h-12'
           >
             {searchStatus === 'loading' ? '搜索中...' : '搜索地址'}
           </button>
@@ -247,34 +246,34 @@ export const AddressConfigPanel = ({
 
       <section className='space-y-4'>
         <div>
-          <h3 className='text-base font-semibold text-slate-900'>解析结果</h3>
-          <p className='mt-1 text-sm text-slate-500'>搜索成功后会在这里展示签到所需的位置参数。</p>
+          <h3 className='font-display text-2xl font-semibold text-[color:var(--cx-text)]'>解析结果</h3>
+          <p className='mt-1 text-sm leading-6 text-[color:var(--cx-text-muted)]'>搜索成功后会在这里展示签到所需的位置参数。</p>
         </div>
 
         <div className='grid gap-4 lg:grid-cols-2'>
-          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
-            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>详细地址</p>
-            <p className='mt-3 break-words text-sm font-medium text-slate-800'>{value.address.trim() || '尚未解析出地址'}</p>
+          <div className='cx-muted-block lg:col-span-2'>
+            <p className='cx-pretitle'>详细地址</p>
+            <p className='mt-3 break-words text-sm font-medium text-[color:var(--cx-text)]'>{value.address.trim() || '尚未解析出地址'}</p>
           </div>
-          <div className='rounded-2xl bg-slate-50 p-4'>
-            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>经度</p>
-            <p className='mt-3 text-sm font-medium text-slate-800'>{value.lon.trim() || '未获取'}</p>
+          <div className='cx-muted-block'>
+            <p className='cx-pretitle'>经度</p>
+            <p className='mt-3 text-sm font-medium text-[color:var(--cx-text)]'>{value.lon.trim() || '未获取'}</p>
           </div>
-          <div className='rounded-2xl bg-slate-50 p-4'>
-            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>纬度</p>
-            <p className='mt-3 text-sm font-medium text-slate-800'>{value.lat.trim() || '未获取'}</p>
+          <div className='cx-muted-block'>
+            <p className='cx-pretitle'>纬度</p>
+            <p className='mt-3 text-sm font-medium text-[color:var(--cx-text)]'>{value.lat.trim() || '未获取'}</p>
           </div>
-          <div className='rounded-2xl bg-slate-50 p-4 lg:col-span-2'>
-            <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>当前状态</p>
-            <p className='mt-3 text-sm font-medium text-slate-800'>{resultStatusText}</p>
+          <div className='cx-muted-block lg:col-span-2'>
+            <p className='cx-pretitle'>当前状态</p>
+            <p className='mt-3 text-sm font-medium text-[color:var(--cx-text)]'>{resultStatusText}</p>
           </div>
         </div>
       </section>
 
       <section className='space-y-4'>
         <div>
-          <h3 className='text-base font-semibold text-slate-900'>主操作</h3>
-          <p className='mt-1 text-sm text-slate-500'>优先使用这里的两个操作，不需要手动理解经纬度。</p>
+          <h3 className='font-display text-2xl font-semibold text-[color:var(--cx-text)]'>主操作</h3>
+          <p className='mt-1 text-sm leading-6 text-[color:var(--cx-text-muted)]'>优先使用这里的两个操作，不需要手动理解经纬度。</p>
         </div>
 
         <div className='flex flex-col gap-3 sm:flex-row'>
@@ -283,7 +282,7 @@ export const AddressConfigPanel = ({
               type='button'
               onClick={() => void runSave()}
               disabled={!hasResolvedLocation || loadingAction !== ''}
-              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+              className='cx-btn-primary h-12'
             >
               {loadingAction === 'save' ? '保存中...' : '保存为默认地址'}
             </button>
@@ -294,7 +293,7 @@ export const AddressConfigPanel = ({
               type='button'
               onClick={() => void runUse()}
               disabled={!hasResolvedLocation || useDisabled || loadingAction !== ''}
-              className='h-12 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+              className='cx-btn-secondary h-12'
             >
               {loadingAction === 'use' ? '提交中...' : useButtonLabel}
             </button>
@@ -302,25 +301,25 @@ export const AddressConfigPanel = ({
         </div>
 
         {saveStatus || useStatus ? (
-          <p className='text-sm text-slate-500'>{useStatus || saveStatus}</p>
+          <p className='text-sm leading-6 text-[color:var(--cx-text-muted)]'>{useStatus || saveStatus}</p>
         ) : null}
       </section>
 
-      <section className='rounded-2xl border border-slate-200 bg-slate-50/80 p-4'>
+      <section className='cx-surface p-4'>
         <button
           type='button'
           onClick={() => setAdvancedOpen((current) => !current)}
-          className='flex w-full items-center justify-between text-left text-sm font-semibold text-slate-900'
+          className='flex w-full items-center justify-between text-left text-sm font-semibold text-[color:var(--cx-text)]'
         >
           <span>高级选项</span>
-          <span className='text-slate-400'>{advancedOpen ? '收起' : '展开'}</span>
+          <span className='text-[color:var(--cx-text-muted)]'>{advancedOpen ? '收起' : '展开'}</span>
         </button>
 
         {advancedOpen ? (
           <div className='mt-4 space-y-5'>
             <div className='grid gap-4 lg:grid-cols-2'>
               <label className='block'>
-                <span className='mb-2 block text-sm font-medium text-slate-700'>手动输入经度</span>
+                <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>手动输入经度</span>
                 <input
                   value={value.lon}
                   onChange={(event) => updateValue({ lon: event.target.value })}
@@ -330,7 +329,7 @@ export const AddressConfigPanel = ({
               </label>
 
               <label className='block'>
-                <span className='mb-2 block text-sm font-medium text-slate-700'>手动输入纬度</span>
+                <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>手动输入纬度</span>
                 <input
                   value={value.lat}
                   onChange={(event) => updateValue({ lat: event.target.value })}
@@ -345,7 +344,7 @@ export const AddressConfigPanel = ({
                 type='button'
                 onClick={() => void reverseLookup()}
                 disabled={searchStatus === 'loading'}
-                className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-60'
+                className='cx-btn-secondary'
               >
                 坐标反查地址
               </button>
@@ -356,7 +355,7 @@ export const AddressConfigPanel = ({
                 <button
                   type='button'
                   onClick={() => setMapOpen((current) => !current)}
-                  className='rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900'
+                  className='cx-btn-secondary'
                 >
                   {mapOpen ? '关闭地图选点' : '打开地图选点'}
                 </button>

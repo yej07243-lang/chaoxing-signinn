@@ -1,20 +1,35 @@
 import React from 'react';
 import { EmptyState } from '../components/EmptyState';
+import { SectionHeader } from '../components/SectionHeader';
 import { SectionCard } from '../components/SectionCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAppState } from '../hooks/useAppState';
 
 export const CoursesPage = () => {
   const { courses, activity } = useAppState();
+  const activeCount = courses.filter((course) => course.hasTask).length;
 
   return (
     <div className='space-y-6'>
-      <div>
-        <p className='text-sm font-medium uppercase tracking-[0.25em] text-slate-400'>Courses</p>
-        <h1 className='mt-3 text-3xl font-semibold text-slate-950'>课程 / 签到列表</h1>
-        <p className='mt-3 max-w-2xl text-sm leading-6 text-slate-500'>
-          现有后端接口只直接暴露当前待签到活动，所以这个页面会汇总当前任务和最近签到记录，形成更清晰的课程视图。
-        </p>
+      <SectionHeader
+        eyebrow='Courses'
+        title='课程与任务视图'
+        description='当前后端只直接返回待签到活动，所以这里把最近检测记录沉淀成课程视图，让工作区更像真正的产品列表页。'
+      />
+
+      <div className='grid gap-4 lg:grid-cols-3'>
+        <div className='cx-kpi'>
+          <p className='cx-pretitle'>总记录数</p>
+          <p className='font-display mt-3 text-4xl font-semibold text-[color:var(--cx-text)]'>{courses.length}</p>
+        </div>
+        <div className='cx-kpi'>
+          <p className='cx-pretitle'>进行中任务</p>
+          <p className='font-display mt-3 text-4xl font-semibold text-[color:var(--cx-text)]'>{activeCount}</p>
+        </div>
+        <div className='cx-kpi'>
+          <p className='cx-pretitle'>当前实时活动</p>
+          <p className='mt-3 text-sm leading-6 text-[color:var(--cx-text)]'>{activity?.name || '暂无活动'}</p>
+        </div>
       </div>
 
       <SectionCard title='课程列表'>
@@ -23,16 +38,16 @@ export const CoursesPage = () => {
         ) : (
           <div className='grid gap-4 md:grid-cols-2'>
             {courses.map((course) => (
-              <article key={course.id} className='rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/90 p-5 transition hover:border-slate-300'>
+              <article key={course.id} className='rounded-[28px] border border-[color:var(--cx-border)] bg-white/70 p-5 transition hover:border-[color:var(--cx-text)]'>
                 <div className='flex flex-col gap-4'>
                   <div>
-                    <p className='text-lg font-semibold leading-7 text-slate-950'>{course.name}</p>
-                    <p className='mt-2 text-sm text-slate-500'>更新时间：{new Date(course.updatedAt).toLocaleString()}</p>
+                    <p className='font-display text-2xl font-semibold leading-7 text-[color:var(--cx-text)]'>{course.name}</p>
+                    <p className='mt-2 text-sm text-[color:var(--cx-text-muted)]'>更新时间：{new Date(course.updatedAt).toLocaleString()}</p>
                   </div>
 
-                  <div className='grid gap-3 rounded-2xl bg-white/80 p-4 sm:grid-cols-2'>
+                  <div className='grid gap-3 rounded-[22px] bg-[color:var(--cx-bg-soft)]/90 p-4 sm:grid-cols-2'>
                     <div>
-                      <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>签到任务</p>
+                      <p className='cx-pretitle'>签到任务</p>
                       <div className='mt-2'>
                         <StatusBadge tone={course.hasTask ? 'success' : 'neutral'}>
                           {course.hasTask ? '当前有签到任务' : '当前无签到任务'}
@@ -40,7 +55,7 @@ export const CoursesPage = () => {
                       </div>
                     </div>
                     <div>
-                      <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>签到状态</p>
+                      <p className='cx-pretitle'>签到状态</p>
                       <div className='mt-2'>
                         <StatusBadge tone={course.status === '已签到' ? 'success' : course.status === '未签到' ? 'warning' : 'neutral'}>
                           {course.status}
@@ -57,9 +72,9 @@ export const CoursesPage = () => {
 
       {activity ? (
         <SectionCard title='当前检测到的任务'>
-          <div className='rounded-3xl bg-slate-950 px-5 py-6 text-white'>
-            <p className='text-sm text-slate-300'>{activity.name}</p>
-            <p className='mt-2 text-xs uppercase tracking-[0.25em] text-slate-500'>Ready Now</p>
+          <div className='rounded-[28px] bg-[color:var(--cx-dark)] px-5 py-6 text-white'>
+            <p className='text-sm text-stone-300'>{activity.name}</p>
+            <p className='mt-2 text-xs uppercase tracking-[0.25em] text-stone-500'>Ready Now</p>
           </div>
         </SectionCard>
       ) : null}

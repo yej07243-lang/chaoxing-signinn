@@ -3,8 +3,7 @@ import { useAppState } from '../hooks/useAppState';
 import { signTypeLabel } from '../services/api';
 import { StatusBadge } from './StatusBadge';
 
-const fieldClassName =
-  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900';
+const fieldClassName = 'cx-input';
 
 type SignMethodCard = {
   id: string;
@@ -49,7 +48,7 @@ export const SignActionPanel = ({
             type='button'
             onClick={() => void submit({ mode: 'general' })}
             disabled={!hasTask || currentType !== 0 || signPending}
-            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            className='cx-btn-primary h-12'
           >
             {signPending && currentType === 0 ? '处理中...' : '提交普通签到'}
           </button>
@@ -63,7 +62,7 @@ export const SignActionPanel = ({
         renderBody: () => (
           <div className='space-y-4'>
             <label className='block'>
-              <span className='mb-2 block text-sm font-medium text-slate-700'>签到图片</span>
+              <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>签到图片</span>
               <input
                 type='file'
                 accept='image/*'
@@ -75,7 +74,7 @@ export const SignActionPanel = ({
               type='button'
               onClick={() => void submit({ mode: 'photo', photoFile })}
               disabled={!hasTask || currentType !== 0 || !photoFile || signPending}
-              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+              className='cx-btn-primary h-12'
             >
               {signPending && currentType === 0 ? '处理中...' : '提交拍照签到'}
             </button>
@@ -92,7 +91,7 @@ export const SignActionPanel = ({
             type='button'
             onClick={() => void submit({})}
             disabled={!hasTask || currentType !== 3 || signPending}
-            className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+            className='cx-btn-primary h-12'
           >
             {signPending && currentType === 3 ? '处理中...' : '提交手势签到'}
           </button>
@@ -105,10 +104,10 @@ export const SignActionPanel = ({
         matches: currentType === 4,
         renderBody: () => (
           <div className='space-y-4'>
-            <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600'>
+            <div className='cx-muted-block text-sm text-[color:var(--cx-text-muted)]'>
               当前地址：{address.address || '未填写'} ｜ 经度：{address.lon || '未填写'} ｜ 纬度：{address.lat || '未填写'}
             </div>
-            <div className='rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500'>
+            <div className='rounded-[22px] border border-dashed border-[color:var(--cx-border)] px-4 py-3 text-sm text-[color:var(--cx-text-muted)]'>
               {currentType === 4 ? '当前任务是位置签到，请在上方主操作区直接提交。' : '这里只保留说明，真正的入口在上方地址配置区。'}
             </div>
           </div>
@@ -122,7 +121,7 @@ export const SignActionPanel = ({
         renderBody: () => (
           <div className='space-y-4'>
             <label className='block'>
-              <span className='mb-2 block text-sm font-medium text-slate-700'>二维码图片</span>
+              <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>二维码图片</span>
               <input
                 type='file'
                 accept='image/*'
@@ -132,7 +131,7 @@ export const SignActionPanel = ({
             </label>
 
             <label className='block'>
-              <span className='mb-2 block text-sm font-medium text-slate-700'>enc 参数</span>
+              <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>enc 参数</span>
               <input
                 value={qrEnc}
                 onChange={(event) => setQrEnc(event.target.value)}
@@ -142,7 +141,7 @@ export const SignActionPanel = ({
             </label>
 
             <label className='block'>
-              <span className='mb-2 block text-sm font-medium text-slate-700'>海拔</span>
+              <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>海拔</span>
               <input value={altitude} onChange={(event) => setAltitude(event.target.value)} className={fieldClassName} />
             </label>
 
@@ -150,7 +149,7 @@ export const SignActionPanel = ({
               type='button'
               onClick={() => void submit({ qrEnc, qrImage })}
               disabled={!hasTask || currentType !== 2 || (!qrEnc.trim() && !qrImage) || !address.address || !address.lon || !address.lat || signPending}
-              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+              className='cx-btn-primary h-12'
             >
               {signPending && currentType === 2 ? '处理中...' : '提交二维码签到'}
             </button>
@@ -165,7 +164,7 @@ export const SignActionPanel = ({
         renderBody: () => (
           <div className='space-y-4'>
             <label className='block'>
-              <span className='mb-2 block text-sm font-medium text-slate-700'>签到码</span>
+              <span className='mb-2 block text-sm font-medium text-[color:var(--cx-text)]'>签到码</span>
               <input
                 value={signCode}
                 onChange={(event) => setSignCode(event.target.value)}
@@ -177,7 +176,7 @@ export const SignActionPanel = ({
               type='button'
               onClick={() => void submit({ signCode })}
               disabled={!hasTask || currentType !== 5 || !signCode.trim() || signPending}
-              className='h-12 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+              className='cx-btn-primary h-12'
             >
               {signPending && currentType === 5 ? '处理中...' : '提交签到码签到'}
             </button>
@@ -194,8 +193,8 @@ export const SignActionPanel = ({
       </div>
 
       <div>
-        <h2 className='text-2xl font-semibold text-slate-950'>{activity?.name || '当前没有待签到任务'}</h2>
-        <p className='mt-2 text-sm leading-6 text-slate-500'>
+        <h2 className='font-display text-3xl font-semibold text-[color:var(--cx-text)]'>{activity?.name || '当前没有待签到任务'}</h2>
+        <p className='mt-2 text-sm leading-6 text-[color:var(--cx-text-muted)]'>
           所有签到方式都固定展示在这里。当前活动对应的方式会高亮可用，其余方式保留为可见但不可提交状态。
         </p>
       </div>
@@ -208,7 +207,7 @@ export const SignActionPanel = ({
             <section
               key={card.id}
               className={`rounded-3xl border p-5 transition ${
-                card.matches ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'
+                card.matches ? 'border-[color:var(--cx-text)] bg-[color:var(--cx-bg-soft)]' : 'border-[color:var(--cx-border)] bg-white/65'
               }`}
             >
               <div className='flex flex-wrap items-center gap-3'>
@@ -218,14 +217,14 @@ export const SignActionPanel = ({
                 </StatusBadge>
               </div>
 
-              <p className='mt-4 text-sm leading-6 text-slate-500'>{card.description}</p>
+              <p className='mt-4 text-sm leading-6 text-[color:var(--cx-text-muted)]'>{card.description}</p>
               <div className='mt-5'>{card.renderBody()}</div>
             </section>
           );
         })}
       </div>
 
-      {lastSignStatus ? <div className='rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700'>最近结果：{lastSignStatus}</div> : null}
+      {lastSignStatus ? <div className='cx-muted-block text-sm text-[color:var(--cx-text)]'>最近结果：{lastSignStatus}</div> : null}
     </div>
   );
 };

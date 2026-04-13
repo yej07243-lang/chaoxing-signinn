@@ -4,11 +4,11 @@ import { useAppState } from '../hooks/useAppState';
 import { maskPhone } from '../services/storage';
 
 const navItems = [
-  { to: '/', label: 'Dashboard' },
-  { to: '/sign', label: '签到' },
-  { to: '/courses', label: '课程' },
-  { to: '/logs', label: '日志' },
-  { to: '/settings', label: '设置' },
+  { to: '/', label: 'Dashboard', hint: '概览与快速操作' },
+  { to: '/sign', label: '签到', hint: '核心签到工作区' },
+  { to: '/courses', label: '课程', hint: '历史与沉淀记录' },
+  { to: '/logs', label: '日志', hint: '结果追踪与排错' },
+  { to: '/settings', label: '设置', hint: '账号与连接配置' },
 ];
 
 export const AppShell = () => {
@@ -21,7 +21,7 @@ export const AppShell = () => {
           <div className='space-y-4'>
             <p className='text-xs uppercase tracking-[0.34em] text-stone-400'>Chaoxing Sign</p>
             <h1 className='font-display text-[2.1rem] font-semibold leading-none text-stone-50'>Control Atlas</h1>
-            <p className='max-w-[16rem] text-sm leading-6 text-stone-400'>参考产品型导航布局重做，保留现有签到流程和数据入口。</p>
+            <p className='max-w-[16rem] text-sm leading-6 text-stone-400'>把签到系统整理成更像成熟 SaaS 控制台的工作区，而不是脚本面板。</p>
           </div>
 
           <div className='mt-10 rounded-[28px] border border-white/8 bg-white/5 p-5'>
@@ -39,12 +39,13 @@ export const AppShell = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `rounded-[22px] px-4 py-3 text-sm font-medium transition ${
+                  `rounded-[22px] px-4 py-3 transition ${
                     isActive ? 'bg-[color:var(--cx-panel-strong)] text-[color:var(--cx-dark)]' : 'text-stone-300 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
-                {item.label}
+                <p className='text-sm font-medium'>{item.label}</p>
+                <p className='mt-1 text-xs text-current/70'>{item.hint}</p>
               </NavLink>
             ))}
           </nav>
@@ -65,7 +66,7 @@ export const AppShell = () => {
               <p className='mt-2 font-display text-3xl font-semibold text-[color:var(--cx-text)]'>Front-end workspace</p>
             </div>
             <div className='rounded-[22px] bg-[color:var(--cx-accent-soft)] px-4 py-3 text-sm text-[color:var(--cx-accent)]'>
-              当前页面只重做表现层，不改后端接口行为。
+              当前页面只重做产品层体验，不改后端接口行为。
             </div>
           </div>
           <Outlet />

@@ -1,4 +1,7 @@
 import React from 'react';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
+import { SectionHeader } from '../components/SectionHeader';
 import { SectionCard } from '../components/SectionCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAppState } from '../hooks/useAppState';
@@ -23,19 +26,17 @@ export const DashboardPage = () => {
   const hasTask = activityState === 'ready' && !!activity?.activeId;
 
   return (
-    <div className='space-y-6'>
-      <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
-        <div>
-          <p className='text-sm font-medium uppercase tracking-[0.25em] text-[color:var(--cx-text-muted)]'>Overview</p>
-          <h1 className='font-display mt-3 text-5xl font-semibold leading-none text-[color:var(--cx-text)]'>Dashboard</h1>
-          <p className='mt-4 max-w-2xl text-sm leading-6 text-[color:var(--cx-text-muted)]'>聚合账号、当前任务和最近结果。首页参考 `careercompass` 的讲述式布局，只保留你真正会立即查看的信息。</p>
-        </div>
-
-        <div className='flex flex-wrap gap-3'>
+      <div className='space-y-6'>
+      <SectionHeader
+        eyebrow='Overview'
+        title='Dashboard'
+        description='聚合账号、当前任务和最近结果。首页参考产品化控制台的叙事节奏，只保留真正会立即查看的信息。'
+        aside={
+          <>
           <button
             type='button'
             onClick={() => refreshActivity()}
-            className='rounded-[22px] border border-[color:var(--cx-border)] bg-white/75 px-4 py-3 text-sm font-semibold text-[color:var(--cx-text)] transition hover:border-[color:var(--cx-text)]'
+            className='cx-btn-secondary'
           >
             立即检测签到
           </button>
@@ -43,12 +44,13 @@ export const DashboardPage = () => {
             type='button'
             disabled={!hasTask || signPending}
             onClick={signCurrentTask}
-            className='rounded-[22px] bg-[color:var(--cx-dark)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-stone-300'
+            className='cx-btn-primary'
           >
             {signPending ? '签到中...' : '立即签到'}
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <section className='shadow-panel overflow-hidden rounded-[34px] border border-[color:var(--cx-border)] bg-[color:var(--cx-panel-strong)]'>
         <div className='grid gap-0 lg:grid-cols-[1.15fr_0.85fr]'>
@@ -85,6 +87,14 @@ export const DashboardPage = () => {
           </div>
         </div>
       </section>
+
+      {activityState === 'loading' ? (
+        <LoadingState title='正在刷新任务' description='前端正在从后端拉取课程活动，并更新首页状态卡片。' />
+      ) : null}
+
+      {activityState === 'error' ? (
+        <ErrorState title='任务加载失败' description='当前活动查询没有成功，通常是 API 地址错误、凭证失效或网络临时不可达。' />
+      ) : null}
 
       <div className='grid gap-4 lg:grid-cols-4'>
         <SectionCard title='当前账号'>
