@@ -1,7 +1,7 @@
 import { Html5Qrcode } from 'html5-qrcode';
 import { readApiOverride } from './storage';
 
-const LOCAL_DEV_API_BASE_URL = 'http://127.0.0.1:5000';
+const LOCAL_DEV_API_BASE_URL = 'http://127.0.0.1:5001';
 const PROXY_API_BASE_URL = '/api';
 
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '');

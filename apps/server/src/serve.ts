@@ -17,6 +17,7 @@ const ENVJSON = getJsonObject('env.json');
 const app = new Koa();
 const router = new Router();
 const processMap = new Map<string, ChildProcess>();
+const PORT = Number(process.env.PORT || 5001);
 
 router.get('/', async (ctx) => {
   ctx.body = '<h1 style="text-align: center">Welcome, chaoxing-sign-cli API service is running.</h1>';
@@ -372,8 +373,8 @@ process.on('SIGINT', () => {
 
 // 若在服务器，直接运行
 if (!ENVJSON.env.SERVERLESS)
-  app.listen(5000, () => {
-    console.log('API Server: http://localhost:5000');
+  app.listen(PORT, () => {
+    console.log(`API Server: http://localhost:${PORT}`);
   });
 
 // 导出云函数
