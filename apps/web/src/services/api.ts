@@ -1,10 +1,11 @@
 import { Html5Qrcode } from 'html5-qrcode';
 import { readApiOverride } from './storage';
 
-const TEMP_DIRECT_API_BASE_URL = 'http://198.176.63.96:5000';
+const LOCAL_DEV_API_BASE_URL = 'http://127.0.0.1:5000';
 const PROXY_API_BASE_URL = '/api';
 
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '');
+const isLocalHostname = (hostname: string) => ['localhost', '127.0.0.1', '::1'].includes(hostname);
 
 export const getApiBaseUrl = () => {
   const override = normalizeBaseUrl(readApiOverride());
@@ -13,7 +14,11 @@ export const getApiBaseUrl = () => {
   const envBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || '');
   if (envBaseUrl) return envBaseUrl;
 
-  return TEMP_DIRECT_API_BASE_URL;
+  if (typeof window !== 'undefined' && isLocalHostname(window.location.hostname)) {
+    return LOCAL_DEV_API_BASE_URL;
+  }
+
+  return PROXY_API_BASE_URL;
 };
 
 export const getApiBaseOptions = () => {
@@ -21,7 +26,7 @@ export const getApiBaseOptions = () => {
     active: getApiBaseUrl(),
     env: normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || ''),
     proxy: PROXY_API_BASE_URL,
-    direct: TEMP_DIRECT_API_BASE_URL,
+    direct: LOCAL_DEV_API_BASE_URL,
   };
 };
 
