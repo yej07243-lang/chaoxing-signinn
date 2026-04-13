@@ -15,19 +15,22 @@ export const AppShell = () => {
   const { session, signOut } = useAppState();
 
   return (
-    <div className='min-h-screen px-4 py-5 sm:px-6 lg:px-8'>
-      <div className='mx-auto grid min-h-[calc(100vh-2.5rem)] max-w-7xl gap-4 lg:grid-cols-[260px_minmax(0,1fr)]'>
-        <aside className='rounded-[32px] border border-white/70 bg-slate-950 px-6 py-8 text-white shadow-panel'>
-          <div className='space-y-3'>
-            <p className='text-xs uppercase tracking-[0.3em] text-slate-400'>Chaoxing Sign</p>
-            <h1 className='text-2xl font-semibold leading-tight'>签到控制台</h1>
-            <p className='text-sm text-slate-400'>更像产品，而不是工具页。</p>
+    <div className='min-h-screen px-4 py-4 sm:px-6 lg:px-8'>
+      <div className='mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl gap-4 lg:grid-cols-[290px_minmax(0,1fr)]'>
+        <aside className='shadow-panel rounded-[34px] border border-black/5 bg-[color:var(--cx-dark)] px-6 py-7 text-white'>
+          <div className='space-y-4'>
+            <p className='text-xs uppercase tracking-[0.34em] text-stone-400'>Chaoxing Sign</p>
+            <h1 className='font-display text-[2.1rem] font-semibold leading-none text-stone-50'>Control Atlas</h1>
+            <p className='max-w-[16rem] text-sm leading-6 text-stone-400'>参考产品型导航布局重做，保留现有签到流程和数据入口。</p>
           </div>
 
-          <div className='mt-10 rounded-3xl bg-white/5 p-4'>
-            <p className='text-xs uppercase tracking-[0.2em] text-slate-500'>当前账号</p>
-            <p className='mt-3 text-lg font-semibold'>{session?.name || '未登录'}</p>
-            <p className='mt-1 text-sm text-slate-400'>{maskPhone(session?.phone || '')}</p>
+          <div className='mt-10 rounded-[28px] border border-white/8 bg-white/5 p-5'>
+            <p className='text-xs uppercase tracking-[0.24em] text-stone-500'>当前账号</p>
+            <p className='mt-3 font-display text-2xl font-semibold text-stone-50'>{session?.name || '未登录'}</p>
+            <p className='mt-1 text-sm text-stone-400'>{maskPhone(session?.phone || '')}</p>
+            <div className='mt-5 rounded-2xl bg-emerald-100/10 px-3 py-2 text-xs uppercase tracking-[0.18em] text-emerald-200'>
+              Workspace Active
+            </div>
           </div>
 
           <nav className='mt-8 grid gap-2'>
@@ -36,8 +39,8 @@ export const AppShell = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                    isActive ? 'bg-white text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                  `rounded-[22px] px-4 py-3 text-sm font-medium transition ${
+                    isActive ? 'bg-[color:var(--cx-panel-strong)] text-[color:var(--cx-dark)]' : 'text-stone-300 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
@@ -49,13 +52,22 @@ export const AppShell = () => {
           <button
             type='button'
             onClick={signOut}
-            className='mt-8 w-full rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-white/30 hover:bg-white/10'
+            className='mt-8 w-full rounded-[22px] border border-white/10 px-4 py-3 text-sm font-medium text-stone-200 transition hover:border-white/30 hover:bg-white/10'
           >
             退出登录
           </button>
         </aside>
 
-        <main className='rounded-[32px] border border-white/70 bg-white/70 p-4 shadow-panel backdrop-blur sm:p-6 lg:p-8'>
+        <main className='shadow-panel rounded-[34px] border border-white/40 bg-[color:var(--cx-panel)] p-4 backdrop-blur sm:p-6 lg:p-8'>
+          <div className='mb-6 flex flex-col gap-4 rounded-[28px] border border-[color:var(--cx-border)] bg-[color:var(--cx-panel-strong)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between'>
+            <div>
+              <p className='text-xs uppercase tracking-[0.26em] text-[color:var(--cx-text-muted)]'>Dashboard Layer</p>
+              <p className='mt-2 font-display text-3xl font-semibold text-[color:var(--cx-text)]'>Front-end workspace</p>
+            </div>
+            <div className='rounded-[22px] bg-[color:var(--cx-accent-soft)] px-4 py-3 text-sm text-[color:var(--cx-accent)]'>
+              当前页面只重做表现层，不改后端接口行为。
+            </div>
+          </div>
           <Outlet />
         </main>
       </div>

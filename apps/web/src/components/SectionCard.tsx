@@ -10,10 +10,10 @@ export const SectionCard = ({
   children: React.ReactNode;
 }) => {
   return (
-    <section className='rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-panel backdrop-blur animate-rise'>
+    <section className='animate-rise rounded-[30px] border border-[color:var(--cx-border)] bg-[color:var(--cx-panel)] p-6 shadow-panel backdrop-blur'>
       <div className='mb-6'>
-        <h2 className='text-lg font-semibold text-slate-900'>{title}</h2>
-        {description ? <p className='mt-2 text-sm text-slate-500'>{description}</p> : null}
+        <h2 className='font-display text-xl font-semibold text-[color:var(--cx-text)]'>{title}</h2>
+        {description ? <p className='mt-2 text-sm leading-6 text-[color:var(--cx-text-muted)]'>{description}</p> : null}
       </div>
       {children}
     </section>

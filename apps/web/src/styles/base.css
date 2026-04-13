@@ -3,12 +3,23 @@
 @tailwind utilities;
 
 :root {
-  color: #0f172a;
+  --cx-bg: #f2ede3;
+  --cx-bg-soft: #fbf7f1;
+  --cx-panel: rgba(255, 251, 245, 0.82);
+  --cx-panel-strong: #fffaf2;
+  --cx-border: rgba(91, 74, 52, 0.12);
+  --cx-text: #20170f;
+  --cx-text-muted: #6f6255;
+  --cx-accent: #1f6b5c;
+  --cx-accent-soft: #d7eee8;
+  --cx-dark: #1d1a17;
+  color: var(--cx-text);
   background:
-    radial-gradient(circle at top left, rgba(215, 230, 255, 0.9), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(244, 247, 251, 0.95), transparent 28%),
-    linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
-  font-family: Manrope, "SF Pro Display", "Segoe UI", sans-serif;
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.85), transparent 28%),
+    radial-gradient(circle at right 18%, rgba(232, 211, 178, 0.4), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(190, 223, 213, 0.5), transparent 22%),
+    linear-gradient(180deg, #f6f0e5 0%, #efe7da 100%);
+  font-family: "Avenir Next", "Manrope", "Segoe UI", sans-serif;
 }
 
 * {
@@ -24,6 +35,12 @@ body,
 body {
   margin: 0;
   min-height: 100vh;
+  color: var(--cx-text);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.85), transparent 28%),
+    radial-gradient(circle at right 18%, rgba(232, 211, 178, 0.4), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(190, 223, 213, 0.5), transparent 22%),
+    linear-gradient(180deg, #f6f0e5 0%, #efe7da 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -40,5 +57,30 @@ a {
 }
 
 ::selection {
-  background: rgba(15, 23, 42, 0.12);
+  background: rgba(31, 107, 92, 0.14);
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  }
+
+  .shadow-panel {
+    box-shadow: 0 24px 80px rgba(62, 43, 25, 0.12);
+  }
+
+  .animate-rise {
+    animation: rise-in 0.45s ease-out;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

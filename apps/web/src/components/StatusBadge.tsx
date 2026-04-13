@@ -1,10 +1,10 @@
 import React from 'react';
 
 const toneClassName = {
-  neutral: 'bg-slate-900/5 text-slate-600',
-  success: 'bg-emerald-500/10 text-emerald-700',
-  warning: 'bg-amber-500/10 text-amber-700',
-  danger: 'bg-rose-500/10 text-rose-700',
+  neutral: 'border border-[color:var(--cx-border)] bg-white/70 text-[color:var(--cx-text-muted)]',
+  success: 'border border-emerald-200 bg-emerald-50 text-emerald-700',
+  warning: 'border border-amber-200 bg-amber-50 text-amber-700',
+  danger: 'border border-rose-200 bg-rose-50 text-rose-700',
 };
 
 export const StatusBadge = ({
@@ -15,7 +15,7 @@ export const StatusBadge = ({
   children: React.ReactNode;
 }) => {
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${toneClassName[tone]}`}>
+    <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${toneClassName[tone]}`}>
       {children}
     </span>
   );
