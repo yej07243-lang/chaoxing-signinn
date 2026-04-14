@@ -41,11 +41,14 @@ jobs:
         run: pnpm --filter chaoxing-sign-desktop assets
 
       - name: Import Apple signing certificate
-        if: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' }}
         env:
           APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE_P12_BASE64" ] || [ -z "$APPLE_CERTIFICATE_PASSWORD" ]; then
+            echo "Apple signing secrets are not configured; continuing with unsigned macOS build."
+            exit 0
+          fi
           CERT_PATH="$RUNNER_TEMP/apple-signing-cert.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
           echo "$APPLE_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERT_PATH"
@@ -99,11 +102,15 @@ jobs:
         run: pnpm --filter chaoxing-sign-desktop assets
 
       - name: Materialize Windows signing certificate
-        if: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != '' }}
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_PFX_BASE64) -or [string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_PASSWORD)) {
+            Write-Host "Windows signing secrets are not configured; continuing with unsigned Windows build."
+            exit 0
+          }
           $certPath = Join-Path $env:RUNNER_TEMP "windows-signing-cert.pfx"
           [System.IO.File]::WriteAllBytes($certPath, [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_PFX_BASE64))
           "WINDOWS_CERTIFICATE_FILE=$certPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
