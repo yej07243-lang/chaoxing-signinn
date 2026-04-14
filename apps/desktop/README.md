@@ -108,6 +108,15 @@ export APPLE_ID_PASSWORD="app-specific-password"
 export APPLE_TEAM_ID="TEAMID"
 ```
 
+CI secrets for GitHub Actions:
+
+- `APPLE_CERTIFICATE_P12_BASE64`
+- `APPLE_CERTIFICATE_PASSWORD`
+- `APPLE_SIGN_IDENTITY`
+- `APPLE_ID`
+- `APPLE_ID_PASSWORD`
+- `APPLE_TEAM_ID`
+
 ### Windows signing
 
 Set these before running the Windows packaging command:
@@ -116,6 +125,29 @@ Set these before running the Windows packaging command:
 export WINDOWS_CERTIFICATE_FILE="/absolute/path/to/certificate.pfx"
 export WINDOWS_CERTIFICATE_PASSWORD="your-password"
 ```
+
+CI secrets for GitHub Actions:
+
+- `WINDOWS_CERTIFICATE_PFX_BASE64`
+- `WINDOWS_CERTIFICATE_PASSWORD`
+
+## Release flow
+
+Ad hoc packaging without publishing:
+
+```bash
+GitHub Actions -> Desktop Packaging
+```
+
+Signed release publishing:
+
+1. Add the signing secrets listed above in the repository settings
+2. Push a tag like `v1.0.1`, or run `Desktop Release` manually and provide the tag
+3. The workflow builds macOS and Windows installers, then attaches them to a GitHub Release
+
+The release workflow file is:
+
+- `/Users/a1050/chaoxing-signinn/.github/workflows/desktop-release.yml`
 
 ## Notes
 
