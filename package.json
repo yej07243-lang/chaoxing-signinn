@@ -12,7 +12,13 @@
     "start": "node ./apps/server/build/index.js",
     "serve": "node ./apps/server/build/serve.js",
     "monitor": "node ./apps/server/build/monitor.js",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "desktop:start": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop start",
+    "desktop:package": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop package",
+    "desktop:make": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make",
+    "desktop:assets": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop assets",
+    "desktop:make:mac": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:mac",
+    "desktop:make:win": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:win"
   },
   "repository": "https://github.com/cxOrz/chaoxing-sign-cli.git",
   "author": "mcx",
