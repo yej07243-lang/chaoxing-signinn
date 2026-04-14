@@ -13,9 +13,6 @@ const appleId = process.env.APPLE_ID;
 const appleIdPassword = process.env.APPLE_ID_PASSWORD;
 const appleTeamId = process.env.APPLE_TEAM_ID;
 
-const windowsCertificateFile = process.env.WINDOWS_CERTIFICATE_FILE;
-const windowsCertificatePassword = process.env.WINDOWS_CERTIFICATE_PASSWORD;
-
 const packagerConfig = {
   asar: true,
   prune: false,
@@ -54,16 +51,6 @@ module.exports = {
   packagerConfig,
   rebuildConfig: {},
   makers: [
-    {
-      name: '@electron-forge/maker-squirrel',
-      config: {
-        name: 'ChaoxingSignDesktop',
-        setupExe: 'ChaoxingSignDesktopSetup.exe',
-        setupIcon: hasIcon('ico') ? `${iconBasePath}.ico` : undefined,
-        certificateFile: windowsCertificateFile || undefined,
-        certificatePassword: windowsCertificatePassword || undefined
-      }
-    },
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin']

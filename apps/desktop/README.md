@@ -86,13 +86,6 @@ cd /Users/a1050/chaoxing-signinn
 corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:mac
 ```
 
-Windows distributables (`.exe`, `.nupkg`, `RELEASES`) on a Windows runner:
-
-```bash
-cd /Users/a1050/chaoxing-signinn
-corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:win
-```
-
 ## Signing
 
 Signing is wired through environment variables so packaging config stays source-controlled.
@@ -117,20 +110,6 @@ CI secrets for GitHub Actions:
 - `APPLE_ID_PASSWORD`
 - `APPLE_TEAM_ID`
 
-### Windows signing
-
-Set these before running the Windows packaging command:
-
-```bash
-export WINDOWS_CERTIFICATE_FILE="/absolute/path/to/certificate.pfx"
-export WINDOWS_CERTIFICATE_PASSWORD="your-password"
-```
-
-CI secrets for GitHub Actions:
-
-- `WINDOWS_CERTIFICATE_PFX_BASE64`
-- `WINDOWS_CERTIFICATE_PASSWORD`
-
 ## Release flow
 
 Ad hoc packaging without publishing:
@@ -139,15 +118,7 @@ Ad hoc packaging without publishing:
 GitHub Actions -> Desktop Packaging
 ```
 
-Signed release publishing:
-
-1. Add the signing secrets listed above in the repository settings
-2. Push a tag like `v1.0.1`, or run `Desktop Release` manually and provide the tag
-3. The workflow builds macOS and Windows installers, then attaches them to a GitHub Release
-
-The release workflow file is:
-
-- `/Users/a1050/chaoxing-signinn/.github/workflows/desktop-release.yml`
+This repository now only publishes macOS desktop builds.
 
 ## Notes
 

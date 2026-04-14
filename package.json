@@ -17,8 +17,7 @@
     "desktop:package": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop package",
     "desktop:make": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make",
     "desktop:assets": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop assets",
-    "desktop:make:mac": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:mac",
-    "desktop:make:win": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:win"
+    "desktop:make:mac": "corepack pnpm@10.11.0 --filter chaoxing-sign-desktop make:mac"
   },
   "repository": "https://github.com/cxOrz/chaoxing-sign-cli.git",
   "author": "mcx",
